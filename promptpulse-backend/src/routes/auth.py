@@ -1,13 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-from ..database import get_db
-from ..models.user import User
+from fastapi import APIRouter
 
 router = APIRouter(prefix="/api/auth", tags=["authentication"])
 
 @router.post("/login")
-async def login(db: Session = Depends(get_db)):
-    # Demo login - returns mock user data
+async def login():
     return {
         "access_token": "demo_token_12345",
         "token_type": "bearer",
@@ -19,7 +15,7 @@ async def login(db: Session = Depends(get_db)):
     }
 
 @router.post("/register")
-async def register(db: Session = Depends(get_db)):
+async def register():
     return {"message": "Registration successful"}
 
 @router.get("/me")

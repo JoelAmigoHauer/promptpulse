@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PromptPulse - Brand Intelligence Platform</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Arial', sans-serif; background: #f8fafc; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        
+        /* Header */
+        .header { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        .header h1 { color: #6366f1; font-size: 2.5em; margin-bottom: 10px; }
+        .header p { color: #64748b; font-size: 1.1em; }
+        
+        /* Layout */
+        .main-grid { display: grid; grid-template-columns: 300px 1fr; gap: 30px; }
+        .sidebar { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); height: fit-content; }
+        .main-content { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        
+        /* Search Form */
+        .search-form { display: flex; gap: 15px; margin-bottom: 30px; }
+        .search-input { flex: 1; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 16px; }
+        .search-input:focus { outline: none; border-color: #6366f1; }
+        .search-btn { padding: 12px 24px; background: #6366f1; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .search-btn:hover { background: #4f46e5; }
+        .search-btn:disabled { background: #94a3b8; cursor: not-allowed; }
+        .save-btn { padding: 12px 20px; background: #059669; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .save-btn:hover { background: #047857; }
+        .save-btn:disabled { background: #94a3b8; cursor: not-allowed; }
+        
+        /* Status */
+        .status { padding: 12px; border-radius: 8px; margin-bottom: 20px; }
+        .status.success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .status.error { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+        .status.loading { background: #dbeafe; color: #1d4ed8; border: 1px solid #bfdbfe; }
+        
+        /* Results */
+        .results-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: #f8fafc; padding: 20px; border-radius: 10px; text-align: center; border: 1px solid #e2e8f0; }
+        .stat-number { font-size: 2em; font-weight: bold; color: #6366f1; }
+        .stat-label { color: #64748b; font-size: 0.9em; margin-top: 5px; }
+        .providers { background: #f0f9ff; padding: 10px; border-radius: 8px; margin-bottom: 20px; }
+        .provider-tag { display: inline-block; background: #3b82f6; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.8em; margin-right: 8px; }
+        
+        /* Mentions */
+        .mentions { max-height: 600px; overflow-y: auto; }
+        .mention { background: #fafafa; padding: 20px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid #6366f1; }
+        .mention-header { display: flex; justify-content: between; align-items: center; margin-bottom: 10px; }
+        .mention-provider { font-weight: bold; color: #6366f1; text-transform: uppercase; }
+        .mention-sentiment { font-size: 0.85em; padding: 4px 8px; border-radius: 4px; }
+        .mention-sentiment.positive { background: #dcfce7; color: #166534; }
+        .mention-sentiment.negative { background: #fef2f2; color: #dc2626; }
+        .mention-sentiment.neutral { background: #fef3c7; color: #d97706; }
+        .mention-content { line-height: 1.6; color: #374151; margin-bottom: 10px; }
+        .mention-keywords { font-size: 0.8em; }
+        .keyword-tag { background: #e0e7ff; color: #3730a3; padding: 2px 6px; border-radius: 3px; margin-right: 5px; }
+        
+        /* Sidebar */
+        .sidebar h3 { color: #374151; margin-bottom: 15px; font-size: 1.2em; }
+        .sidebar-section { margin-bottom: 25px; }
+        .history-item, .saved-item { padding: 12px; background: #f8fafc; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: background 0.2s; }
+        .history-item:hover, .saved-item:hover { background: #e2e8f0; }
+        .item-name { font-weight: bold; color: #374151; }
+        .item-stats { font-size: 0.8em; color: #64748b; margin-top: 4px; }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-grid { grid-template-columns: 1fr; }
+            .search-form { flex-direction: column; }
+            .results-summary { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🔍 PromptPulse</h1>
+            <p>AI-Powered Brand Intelligence Platform • Powered by OpenRouter (GPT-4, Claude, Gemini)</p>
+        </div>
+
+        <div class="main-grid">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="sidebar-section">
+                    <h3>🕒 Recent Searches</h3>
+                    <div id="searchHistory"></div>
+                </div>
+                
+                <div class="sidebar-section">
+                    <h3>⭐ Saved Searches</h3>
+                    <div id="savedSearches"></div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <h2 style="margin-bottom: 20px; color: #374151;">Brand Intelligence Search</h2>
+                
+                <!-- Search Form -->
+                <form class="search-form" id="searchForm">
+                    <input type="text" class="search-input" id="brandInput" placeholder="Enter brand name (e.g., Tesla, Apple, Google, Amazon)" value="Tesla">
+                    <button type="submit" class="search-btn" id="searchBtn">Search</button>
+                    <button type="button" class="save-btn" id="saveBtn" style="display: none;">Save</button>
+                </form>
+
+                <!-- Status -->
+                <div id="status" class="status success">✅ Backend API is ready</div>
+
+                <!-- Results -->
+                <div id="results" style="display: none;">
+                    <div class="results-summary">
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalMentions">0</div>
+                            <div class="stat-label">Total Mentions</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="visibilityScore">0</div>
+                            <div class="stat-label">Visibility Score</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="sentimentScore">0</div>
+                            <div class="stat-label">Positive Sentiment</div>
+                        </div>
+                    </div>
+                    
+                    <div class="providers" id="providersUsed"></div>
+                    
+                    <h3 style="margin-bottom: 20px; color: #374151;">AI Analysis Results</h3>
+                    <div class="mentions" id="mentionsContainer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        let searchHistory = JSON.parse(localStorage.getItem('searchHistory') || '[]');
+        let savedSearches = JSON.parse(localStorage.getItem('savedSearches') || '[]');
+        let currentResults = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateSidebar();
+            checkBackendStatus();
+            
+            document.getElementById('searchForm').addEventListener('submit', handleSearch);
+            document.getElementById('saveBtn').addEventListener('click', saveCurrentSearch);
+        });
+
+        // Check backend status
+        async function checkBackendStatus() {
+            try {
+                const response = await fetch('http://localhost:8000/health');
+                if (response.ok) {
+                    updateStatus('✅ Backend API is ready', 'success');
+                } else {
+                    updateStatus('❌ Backend API not responding', 'error');
+                }
+            } catch (error) {
+                updateStatus('❌ Cannot connect to backend API', 'error');
+            }
+        }
+
+        // Handle search
+        async function handleSearch(e) {
+            e.preventDefault();
+            const brandName = document.getElementById('brandInput').value.trim();
+            
+            if (!brandName) {
+                updateStatus('Please enter a brand name', 'error');
+                return;
+            }
+
+            const searchBtn = document.getElementById('searchBtn');
+            searchBtn.disabled = true;
+            searchBtn.textContent = 'Analyzing...';
+            
+            updateStatus('🔍 Searching with OpenRouter (GPT-4, Claude, Gemini)...', 'loading');
+            document.getElementById('results').style.display = 'none';
+
+            try {
+                const response = await fetch('http://localhost:8000/api/brands/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        brand_name: brandName,
+                        keywords: [brandName],
+                        save_to_db: false
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                currentResults = data;
+                
+                // Add to search history
+                const historyItem = {
+                    brand: brandName,
+                    timestamp: new Date().toISOString(),
+                    mentions: data.total_mentions,
+                    visibility: data.visibility_score
+                };
+                searchHistory.unshift(historyItem);
+                searchHistory = searchHistory.slice(0, 10); // Keep last 10
+                localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
+                
+                displayResults(data);
+                updateSidebar();
+                updateStatus('✅ Search completed successfully!', 'success');
+                document.getElementById('saveBtn').style.display = 'block';
+                
+            } catch (error) {
+                updateStatus(`❌ Error: ${error.message}`, 'error');
+                console.error('Search error:', error);
+            } finally {
+                searchBtn.disabled = false;
+                searchBtn.textContent = 'Search';
+            }
+        }
+
+        // Display results
+        function displayResults(data) {
+            document.getElementById('totalMentions').textContent = data.total_mentions;
+            document.getElementById('visibilityScore').textContent = data.visibility_score.toFixed(1);
+            document.getElementById('sentimentScore').textContent = data.sentiment_distribution.positive || 0;
+            
+            // Providers used
+            const providers = [...new Set(data.mentions.map(m => m.provider.toUpperCase()))];
+            document.getElementById('providersUsed').innerHTML = 
+                `<strong>AI Providers:</strong> ${providers.map(p => `<span class="provider-tag">${p}</span>`).join('')}`;
+            
+            // Mixed mentions from all providers
+            const openaiMentions = data.mentions.filter(m => m.provider === 'openai').slice(0, 2);
+            const anthropicMentions = data.mentions.filter(m => m.provider === 'anthropic').slice(0, 2);
+            const googleMentions = data.mentions.filter(m => m.provider === 'google').slice(0, 2);
+            const mixedMentions = [...openaiMentions, ...anthropicMentions, ...googleMentions];
+            
+            document.getElementById('mentionsContainer').innerHTML = mixedMentions.map(mention => `
+                <div class="mention">
+                    <div class="mention-header">
+                        <span class="mention-provider">${mention.provider}</span>
+                        <span class="mention-sentiment ${mention.sentiment_label}">${mention.sentiment_label}</span>
+                    </div>
+                    <div class="mention-content">${mention.content.substring(0, 400)}${mention.content.length > 400 ? '...' : ''}</div>
+                    ${mention.keywords_found.length > 0 ? `<div class="mention-keywords">
+                        ${mention.keywords_found.map(kw => `<span class="keyword-tag">${kw}</span>`).join('')}
+                    </div>` : ''}
+                </div>
+            `).join('');
+            
+            document.getElementById('results').style.display = 'block';
+        }
+
+        // Save current search
+        function saveCurrentSearch() {
+            if (!currentResults) return;
+            
+            const brandName = document.getElementById('brandInput').value.trim();
+            const exists = savedSearches.find(s => s.brand === brandName);
+            
+            if (!exists) {
+                const savedItem = {
+                    brand: brandName,
+                    timestamp: new Date().toISOString(),
+                    mentions: currentResults.total_mentions,
+                    visibility: currentResults.visibility_score,
+                    sentiment: currentResults.sentiment_distribution
+                };
+                savedSearches.push(savedItem);
+                localStorage.setItem('savedSearches', JSON.stringify(savedSearches));
+                updateSidebar();
+                updateStatus('✅ Search saved successfully!', 'success');
+            }
+        }
+
+        // Update sidebar
+        function updateSidebar() {
+            // Search history
+            document.getElementById('searchHistory').innerHTML = searchHistory.slice(0, 5).map(item => `
+                <div class="history-item" onclick="loadSearch('${item.brand}')">
+                    <div class="item-name">${item.brand}</div>
+                    <div class="item-stats">${item.mentions} mentions • ${item.visibility.toFixed(1)} score</div>
+                </div>
+            `).join('') || '<div style="color: #64748b; font-size: 0.9em;">No recent searches</div>';
+            
+            // Saved searches
+            document.getElementById('savedSearches').innerHTML = savedSearches.map(item => `
+                <div class="saved-item" onclick="loadSearch('${item.brand}')">
+                    <div class="item-name">${item.brand} ⭐</div>
+                    <div class="item-stats">${item.mentions} mentions • ${item.visibility.toFixed(1)} score</div>
+                </div>
+            `).join('') || '<div style="color: #64748b; font-size: 0.9em;">No saved searches</div>';
+        }
+
+        // Load search from sidebar
+        function loadSearch(brandName) {
+            document.getElementById('brandInput').value = brandName;
+            document.getElementById('searchForm').dispatchEvent(new Event('submit'));
+        }
+
+        // Update status
+        function updateStatus(message, type) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+        }
+    </script>
+</body>
+</html>

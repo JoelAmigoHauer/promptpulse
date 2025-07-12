@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PromptPulse - Celebration Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        @keyframes pulse-success {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        
+        .pulse-success {
+            animation: pulse-success 2s ease-in-out infinite;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+
+        .modal {
+            display: none;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+
+        /* Celebration Animations */
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        @keyframes celebration-bounce {
+            0% {
+                transform: scale(0.3) translateY(50px);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.05) translateY(-10px);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes pulse-grow {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        @keyframes slide-up {
+            0% {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            100% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slide-in-right {
+            0% {
+                transform: translateX(100px);
+                opacity: 0;
+            }
+            100% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes scale-in {
+            0% {
+                transform: scale(0);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes spin-slow {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes fade-in {
+            0% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        @keyframes grade-flip {
+            0% {
+                transform: rotateY(0deg);
+            }
+            50% {
+                transform: rotateY(90deg);
+            }
+            100% {
+                transform: rotateY(0deg);
+            }
+        }
+
+        .animate-confetti-fall {
+            animation: confetti-fall 3s linear infinite;
+        }
+
+        .animate-celebration-bounce {
+            animation: celebration-bounce 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .animate-pulse-grow {
+            animation: pulse-grow 2s ease-in-out infinite;
+        }
+
+        .animate-slide-up {
+            animation: slide-up 0.6s ease-out forwards;
+        }
+
+        .animate-slide-in-right {
+            animation: slide-in-right 0.6s ease-out forwards;
+        }
+
+        .animate-scale-in {
+            animation: scale-in 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .animate-spin-slow {
+            animation: spin-slow 3s linear infinite;
+        }
+
+        .animate-fade-in {
+            animation: fade-in 0.3s ease-out;
+        }
+
+        .animate-grade-flip {
+            animation: grade-flip 1s ease-in-out;
+        }
+
+        /* Gradient backgrounds */
+        .bg-celebration-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .bg-success-gradient {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .bg-warning-gradient {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .celebration-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .celebration-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen flex">
+        <!-- Sidebar (same as before) -->
+        <div class="w-64 bg-white border-r border-gray-200 flex flex-col h-screen">
+            <!-- Workspace Selector -->
+            <div class="p-4 border-b border-gray-200">
+                <div class="relative">
+                    <button class="w-full flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors group">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center">
+                                <span class="text-white font-bold text-sm">T</span>
+                            </div>
+                            <div class="text-left">
+                                <div class="text-sm font-semibold text-gray-900">Tesla</div>
+                                <div class="text-xs text-gray-500">Workspace</div>
+                            </div>
+                        </div>
+                        <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Navigation Groups -->
+            <nav class="flex-1 overflow-y-auto">
+                <!-- General Group -->
+                <div>
+                    <div class="px-4 py-3">
+                        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide">General</h3>
+                    </div>
+                    <div class="px-2 pb-4">
+                        <button class="w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium bg-blue-50 text-blue-700">
+                            <i data-lucide="layout-dashboard" class="w-5 h-5 text-blue-600 mr-3"></i>
+                            <div class="text-left">
+                                <div class="font-medium">Dashboard</div>
+                                <div class="text-xs text-gray-500 mt-0.5">AEO Action Dashboard overview</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col">
+            <!-- Header Bar -->
+            <div class="flex items-center justify-between py-4 px-6 bg-white border-b border-gray-200">
+                <div class="flex items-center">
+                    <div class="bg-gray-200 rounded-full px-3 py-1 flex items-center space-x-2">
+                        <i data-lucide="clock" class="w-4 h-4 text-gray-600"></i>
+                        <span class="text-sm font-medium text-gray-700 font-mono">00:25:15</span>
+                        <span class="text-sm text-gray-600">•</span>
+                        <span class="text-sm text-gray-700">3 pending prompts</span>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <button class="inline-flex items-center space-x-2 px-3 py-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-md">
+                        <i data-lucide="help-circle" class="w-4 h-4"></i>
+                        <span>Help</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Dashboard Content -->
+            <div class="flex-1 p-6">
+                <div class="max-w-6xl mx-auto">
+                    <!-- Page Header -->
+                    <div class="mb-8">
+                        <h1 class="text-3xl font-bold text-gray-900">Celebration Dashboard ✨</h1>
+                        <p class="text-lg text-gray-600 mt-2">Test the celebration animations and positive feedback system</p>
+                    </div>
+
+                    <!-- Celebration Test Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <!-- Grade Improvement -->
+                        <div 
+                            onclick="triggerCelebration('grade-improvement')" 
+                            class="celebration-card bg-success-gradient p-6 rounded-xl shadow-lg text-white cursor-pointer"
+                        >
+                            <div class="flex items-center space-x-3 mb-4">
+                                <i data-lucide="trending-up" class="w-8 h-8"></i>
+                                <div>
+                                    <h3 class="font-bold text-lg">Grade Improved</h3>
+                                    <p class="text-green-100 text-sm">C → A</p>
+                                </div>
+                            </div>
+                            <p class="text-green-100 text-sm">Click to see content grade improvement celebration</p>
+                        </div>
+
+                        <!-- Top Ranking -->
+                        <div 
+                            onclick="triggerCelebration('top-ranking')" 
+                            class="celebration-card bg-celebration-gradient p-6 rounded-xl shadow-lg text-white cursor-pointer"
+                        >
+                            <div class="flex items-center space-x-3 mb-4">
+                                <i data-lucide="crown" class="w-8 h-8"></i>
+                                <div>
+                                    <h3 class="font-bold text-lg">#1 Ranking</h3>
+                                    <p class="text-purple-100 text-sm">Top position achieved</p>
+                                </div>
+                            </div>
+                            <p class="text-purple-100 text-sm">Click to see top ranking celebration</p>
+                        </div>
+
+                        <!-- First Win -->
+                        <div 
+                            onclick="triggerCelebration('first-win')" 
+                            class="celebration-card bg-warning-gradient p-6 rounded-xl shadow-lg text-white cursor-pointer"
+                        >
+                            <div class="flex items-center space-x-3 mb-4">
+                                <i data-lucide="trophy" class="w-8 h-8"></i>
+                                <div>
+                                    <h3 class="font-bold text-lg">First Win</h3>
+                                    <p class="text-pink-100 text-sm">Analytics unlocked</p>
+                                </div>
+                            </div>
+                            <p class="text-pink-100 text-sm">Click to see first win celebration</p>
+                        </div>
+
+                        <!-- Content Published -->
+                        <div 
+                            onclick="triggerCelebration('content-published')" 
+                            class="celebration-card bg-gradient-to-br from-blue-500 to-indigo-600 p-6 rounded-xl shadow-lg text-white cursor-pointer"
+                        >
+                            <div class="flex items-center space-x-3 mb-4">
+                                <i data-lucide="zap" class="w-8 h-8"></i>
+                                <div>
+                                    <h3 class="font-bold text-lg">Brief Generated</h3>
+                                    <p class="text-blue-100 text-sm">Content ready</p>
+                                </div>
+                            </div>
+                            <p class="text-blue-100 text-sm">Click to see content brief celebration</p>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Grade Cards -->
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-6">Interactive Grade Improvements</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <!-- Grade Card 1 -->
+                            <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="font-semibold text-gray-900">"EV financing options"</h3>
+                                    <span id="grade1" class="text-2xl font-bold text-red-500">C</span>
+                                </div>
+                                <p class="text-gray-600 text-sm mb-4">Content needs optimization for better AI rankings</p>
+                                <button 
+                                    onclick="improveGrade(1, 'C', 'A', 'EV financing options')"
+                                    class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                                >
+                                    Optimize Content
+                                </button>
+                            </div>
+
+                            <!-- Grade Card 2 -->
+                            <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="font-semibold text-gray-900">"Tesla charging network"</h3>
+                                    <span id="grade2" class="text-2xl font-bold text-yellow-500">B</span>
+                                </div>
+                                <p class="text-gray-600 text-sm mb-4">Good content, room for improvement</p>
+                                <button 
+                                    onclick="improveGrade(2, 'B', 'A+', 'Tesla charging network')"
+                                    class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                                >
+                                    Optimize Content
+                                </button>
+                            </div>
+
+                            <!-- Grade Card 3 -->
+                            <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="font-semibold text-gray-900">"Electric vehicle maintenance"</h3>
+                                    <span id="grade3" class="text-2xl font-bold text-red-500">D</span>
+                                </div>
+                                <p class="text-gray-600 text-sm mb-4">Significant optimization needed</p>
+                                <button 
+                                    onclick="improveGrade(3, 'D', 'B+', 'Electric vehicle maintenance')"
+                                    class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                                >
+                                    Optimize Content
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ranking Achievement Section -->
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-6">Ranking Achievements</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="font-semibold text-gray-900">Current Rankings</h3>
+                                    <span class="text-sm text-gray-500">Live Data</span>
+                                </div>
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                        <span class="text-sm">"Tesla Model 3 review"</span>
+                                        <span class="font-bold text-yellow-600">#3</span>
+                                    </div>
+                                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                        <span class="text-sm">"EV tax incentives"</span>
+                                        <span class="font-bold text-yellow-600">#2</span>
+                                    </div>
+                                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                        <span class="text-sm">"Electric car charging"</span>
+                                        <span class="font-bold text-yellow-600">#4</span>
+                                    </div>
+                                </div>
+                                <button 
+                                    onclick="achieveTopRanking('Tesla Model 3 review')"
+                                    class="w-full mt-4 bg-yellow-500 text-white py-2 px-4 rounded-lg font-medium hover:bg-yellow-600 transition-colors"
+                                >
+                                    Simulate #1 Achievement
+                                </button>
+                            </div>
+
+                            <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="font-semibold text-gray-900">Celebration Settings</h3>
+                                    <i data-lucide="settings" class="w-5 h-5 text-gray-400"></i>
+                                </div>
+                                <div class="space-y-4">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm text-gray-700">Confetti Effects</span>
+                                        <input type="checkbox" checked class="toggle" />
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm text-gray-700">Sound Effects</span>
+                                        <input type="checkbox" checked class="toggle" />
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm text-gray-700">Achievement Badges</span>
+                                        <input type="checkbox" checked class="toggle" />
+                                    </div>
+                                </div>
+                                <button 
+                                    onclick="triggerCelebration('first-win')"
+                                    class="w-full mt-4 bg-blue-500 text-white py-2 px-4 rounded-lg font-medium hover:bg-blue-600 transition-colors"
+                                >
+                                    Test All Celebrations
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Celebration Modal -->
+    <div id="celebrationModal" class="modal fixed inset-0 z-[9999] pointer-events-none">
+        <!-- Background Overlay -->
+        <div class="absolute inset-0 bg-black bg-opacity-20 animate-fade-in"></div>
+        
+        <!-- Confetti Particles -->
+        <div id="confettiContainer" class="absolute inset-0 overflow-hidden"></div>
+
+        <!-- Main Celebration Modal -->
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div id="celebrationContent" class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center animate-celebration-bounce border-4 border-transparent bg-gradient-to-r from-blue-50 to-purple-50">
+                <!-- Content will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- Floating Achievement Badge -->
+        <div id="achievementBadge" class="absolute top-4 right-4 animate-slide-in-right" style="animation-delay: 1s;">
+            <div class="bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg">
+                🎉 Achievement Unlocked!
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        let currentCelebration = null;
+
+        function triggerCelebration(type, data = {}) {
+            const modal = document.getElementById('celebrationModal');
+            const content = document.getElementById('celebrationContent');
+            const confettiContainer = document.getElementById('confettiContainer');
+            
+            // Clear previous confetti
+            confettiContainer.innerHTML = '';
+            
+            // Generate confetti
+            generateConfetti(confettiContainer);
+            
+            // Set celebration content based on type
+            const celebrationData = getCelebrationData(type, data);
+            content.innerHTML = celebrationData.html;
+            
+            // Show modal
+            modal.classList.add('active');
+            
+            // Reinitialize icons
+            lucide.createIcons();
+            
+            // Auto-hide after 4 seconds
+            currentCelebration = setTimeout(() => {
+                hideCelebration();
+            }, 4000);
+        }
+
+        function hideCelebration() {
+            const modal = document.getElementById('celebrationModal');
+            modal.classList.remove('active');
+            
+            if (currentCelebration) {
+                clearTimeout(currentCelebration);
+                currentCelebration = null;
+            }
+        }
+
+        function generateConfetti(container) {
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                const isStarr = Math.random() > 0.5;
+                
+                particle.style.position = 'absolute';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = '-10%';
+                particle.style.transform = `rotate(${Math.random() * 360}deg)`;
+                particle.style.animationDelay = Math.random() * 2 + 's';
+                particle.classList.add('animate-confetti-fall');
+                
+                if (isStarr) {
+                    particle.innerHTML = '<i data-lucide="star" class="w-4 h-4 text-yellow-400 fill-current"></i>';
+                } else {
+                    particle.className += ' w-3 h-3 rounded-sm bg-gradient-to-r from-blue-400 to-purple-500';
+                }
+                
+                container.appendChild(particle);
+            }
+        }
+
+        function getCelebrationData(type, data) {
+            const celebrations = {
+                'grade-improvement': {
+                    html: `
+                        <div class="animate-pulse-grow mb-6">
+                            <i data-lucide="trending-up" class="w-16 h-16 text-green-500 mx-auto"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-900 mb-2 animate-slide-up">
+                            Content Grade Improved!
+                        </h2>
+                        <p class="text-lg font-semibold mb-4 animate-slide-up text-green-600" style="animation-delay: 0.2s">
+                            From ${data.oldGrade || 'C'} to ${data.newGrade || 'A'}
+                        </p>
+                        <p class="text-gray-600 mb-6 animate-slide-up" style="animation-delay: 0.4s">
+                            Your content optimization is working! Keep up the great work.
+                        </p>
+                        <div class="flex items-center justify-center space-x-4 mb-6 animate-slide-up" style="animation-delay: 0.6s">
+                            <span class="text-3xl font-bold text-red-500 animate-grade-flip">${data.oldGrade || 'C'}</span>
+                            <i data-lucide="trending-up" class="w-6 h-6 text-gray-400 animate-bounce"></i>
+                            <span class="text-3xl font-bold text-green-500 animate-pulse">${data.newGrade || 'A'}</span>
+                        </div>
+                        <div class="flex justify-center animate-slide-up" style="animation-delay: 0.8s">
+                            <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center animate-scale-in">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    `
+                },
+                'top-ranking': {
+                    html: `
+                        <div class="animate-pulse-grow mb-6">
+                            <i data-lucide="crown" class="w-16 h-16 text-yellow-500 mx-auto"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-900 mb-2 animate-slide-up">
+                            🎉 #1 Ranking Achieved!
+                        </h2>
+                        <p class="text-lg font-semibold mb-4 animate-slide-up text-yellow-600" style="animation-delay: 0.2s">
+                            "${data.prompt || 'Your content'}"
+                        </p>
+                        <p class="text-gray-600 mb-6 animate-slide-up" style="animation-delay: 0.4s">
+                            You've captured the top spot! Your authority is established.
+                        </p>
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full text-white font-bold text-xl mb-4 animate-spin-slow">
+                            #1
+                        </div>
+                        <div class="flex justify-center animate-slide-up" style="animation-delay: 0.8s">
+                            <div class="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center animate-scale-in">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    `
+                },
+                'first-win': {
+                    html: `
+                        <div class="animate-pulse-grow mb-6">
+                            <i data-lucide="trophy" class="w-16 h-16 text-blue-500 mx-auto"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-900 mb-2 animate-slide-up">
+                            First Win Unlocked!
+                        </h2>
+                        <p class="text-lg font-semibold mb-4 animate-slide-up text-blue-600" style="animation-delay: 0.2s">
+                            Analytics dashboard now available
+                        </p>
+                        <p class="text-gray-600 mb-6 animate-slide-up" style="animation-delay: 0.4s">
+                            You're on your way to AEO mastery! Check out your new insights.
+                        </p>
+                        <div class="flex justify-center animate-slide-up" style="animation-delay: 0.8s">
+                            <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center animate-scale-in">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    `
+                },
+                'content-published': {
+                    html: `
+                        <div class="animate-pulse-grow mb-6">
+                            <i data-lucide="zap" class="w-16 h-16 text-purple-500 mx-auto"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-900 mb-2 animate-slide-up">
+                            Content Brief Generated!
+                        </h2>
+                        <p class="text-lg font-semibold mb-4 animate-slide-up text-purple-600" style="animation-delay: 0.2s">
+                            Ready for implementation
+                        </p>
+                        <p class="text-gray-600 mb-6 animate-slide-up" style="animation-delay: 0.4s">
+                            Your strategic content brief is ready. Time to create authority-building content!
+                        </p>
+                        <div class="flex justify-center animate-slide-up" style="animation-delay: 0.8s">
+                            <div class="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center animate-scale-in">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    `
+                }
+            };
+
+            return celebrations[type] || celebrations['first-win'];
+        }
+
+        function improveGrade(cardNumber, oldGrade, newGrade, prompt) {
+            const gradeElement = document.getElementById(`grade${cardNumber}`);
+            
+            // Update grade with animation
+            gradeElement.classList.add('animate-grade-flip');
+            
+            setTimeout(() => {
+                gradeElement.textContent = newGrade;
+                gradeElement.className = gradeElement.className.replace('text-red-500', '').replace('text-yellow-500', '') + ' text-green-500';
+            }, 500);
+            
+            // Trigger celebration
+            setTimeout(() => {
+                triggerCelebration('grade-improvement', {
+                    oldGrade,
+                    newGrade,
+                    prompt
+                });
+            }, 1000);
+        }
+
+        function achieveTopRanking(prompt) {
+            triggerCelebration('top-ranking', {
+                prompt,
+                ranking: 1
+            });
+        }
+
+        // Close celebration when clicking outside
+        document.getElementById('celebrationModal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) {
+                hideCelebration();
+            }
+        });
+
+        // Auto-trigger a welcome celebration after page load
+        setTimeout(() => {
+            triggerCelebration('content-published', {
+                briefTitle: 'Welcome to PromptPulse!'
+            });
+        }, 1000);
+    </script>
+</body>
+</html>

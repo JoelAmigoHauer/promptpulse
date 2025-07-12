@@ -4,6 +4,7 @@ import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import BrandsPage from './pages/BrandsPage'
+import APITestPage from './pages/APITestPage';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = React.useState(false)
@@ -45,6 +46,7 @@ function App() {
               <Navigate to="/login" />
             } 
           />
+          <Route path="/api-test" element={<APITestPage />} />
         </Routes>
       </div>
     </Router>

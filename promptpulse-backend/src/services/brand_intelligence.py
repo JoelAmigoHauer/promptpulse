@@ -1,16 +1,57 @@
 import asyncio
 import logging
 from typing import Dict, List, Optional, Any
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import re
 from dataclasses import dataclass
 from enum import Enum
-
-import openai
-import anthropic
-import google.generativeai as genai
+import os
+import aiohttp
+import hashlib
+import time
 from ..config import settings
+from .openrouter_service import openrouter_service, AIProvider as ORProvider, PromptTestResult
+
+OPENROUTER_API_KEY = settings.openrouter_api_key
+OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+
+async def call_openrouter_async(messages, model):
+    """Async version of OpenRouter API call"""
+    async with openrouter_service as service:
+        headers = {
+            "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+            "HTTP-Referer": "https://promptpulse.ai",
+            "X-Title": "PromptPulse AEO Platform",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "model": model,
+            "messages": messages,
+            "max_tokens": 1000,
+            "temperature": 0.7
+        }
+        
+        async with service.session.post(OPENROUTER_URL, headers=headers, json=payload) as response:
+            if response.status == 200:
+                return await response.json()
+            else:
+                raise Exception(f"OpenRouter API error: {response.status}")
+
+def call_openrouter(messages, model):
+    """Sync wrapper for backward compatibility"""
+    import requests
+    headers = {
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "model": model,
+        "messages": messages
+    }
+    response = requests.post(OPENROUTER_URL, headers=headers, json=payload, timeout=60)
+    response.raise_for_status()
+    return response.json()
 
 logger = logging.getLogger(__name__)
 
@@ -49,157 +90,119 @@ class BrandAnalysis:
 
 class BrandIntelligenceEngine:
     def __init__(self):
-        self.openai_client = None
-        self.anthropic_client = None
-        self.google_client = None
-        self._initialize_clients()
-
-    def _initialize_clients(self):
-        """Initialize AI service clients"""
-        try:
-            if settings.openai_api_key:
-                self.openai_client = openai.OpenAI(api_key=settings.openai_api_key)
-            
-            if settings.anthropic_api_key:
-                self.anthropic_client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
-            
-            if settings.google_ai_api_key:
-                genai.configure(api_key=settings.google_ai_api_key)
-                self.google_client = genai.GenerativeModel('gemini-pro')
-        except Exception as e:
-            logger.error(f"Failed to initialize AI clients: {e}")
+        self.cache = {}  # Simple in-memory cache
+        self.rate_limit = {}  # Track API calls per minute
+        self.cache_duration = 3600  # 1 hour cache
+        self.max_calls_per_minute = 10  # Rate limit
 
     async def search_brand_mentions(self, brand_name: str, keywords: List[str]) -> BrandAnalysis:
         """Main method to search for brand mentions across all AI platforms"""
+        
+        # Check cache first
+        cache_key = self._generate_cache_key(brand_name, keywords)
+        cached_result = self._get_from_cache(cache_key)
+        if cached_result:
+            logger.info(f"Returning cached result for {brand_name}")
+            return cached_result
+        
+        # Check rate limit
+        if not self._check_rate_limit():
+            logger.warning("Rate limit exceeded, returning limited results")
+            return self._create_limited_result(brand_name)
+        
         all_mentions = []
-        
-        # Search across all available AI platforms
-        search_tasks = []
-        
-        if self.openai_client:
-            search_tasks.append(self._search_openai(brand_name, keywords))
-        
-        if self.anthropic_client:
-            search_tasks.append(self._search_anthropic(brand_name, keywords))
-        
-        if self.google_client:
-            search_tasks.append(self._search_google(brand_name, keywords))
-        
-        # Execute all searches concurrently
+        search_tasks = [
+            self._search_openai(brand_name, keywords),
+            self._search_anthropic(brand_name, keywords),
+            self._search_google(brand_name, keywords)
+        ]
         results = await asyncio.gather(*search_tasks, return_exceptions=True)
-        
-        # Collect all mentions from successful searches
-        for result in results:
+        for i, result in enumerate(results):
+            provider_names = ["OpenAI", "Anthropic", "Google"]
             if isinstance(result, list):
+                logger.info(f"{provider_names[i]} search returned {len(result)} mentions")
                 all_mentions.extend(result)
             elif isinstance(result, Exception):
-                logger.error(f"Search failed: {result}")
+                logger.error(f"{provider_names[i]} search failed: {result}")
         
-        # Calculate brand analysis
         analysis = self._analyze_brand_visibility(brand_name, all_mentions)
+        
+        # Cache the result
+        self._cache_result(cache_key, analysis)
+        
         return analysis
 
     async def _search_openai(self, brand_name: str, keywords: List[str]) -> List[BrandMention]:
-        """Search for brand mentions using OpenAI GPT"""
         mentions = []
-        
         try:
-            # Generate search prompts
             search_prompts = self._generate_search_prompts(brand_name, keywords)
-            
             for prompt in search_prompts:
                 response = await asyncio.to_thread(
-                    self.openai_client.chat.completions.create,
-                    model="gpt-4o-mini",
-                    messages=[
+                    call_openrouter,
+                    [
                         {"role": "system", "content": "You are a brand intelligence analyst. Provide detailed information about brand mentions, including context, sentiment, and any referenced sources."},
                         {"role": "user", "content": prompt}
                     ],
-                    max_tokens=1000,
-                    temperature=0.3
+                    "openai/gpt-4o-mini"
                 )
-                
-                content = response.choices[0].message.content
-                
-                # Extract mentions from the response
+                content = response["choices"][0]["message"]["content"]
                 extracted_mentions = self._extract_mentions_from_response(
                     content, brand_name, keywords, AIProvider.OPENAI.value
                 )
                 mentions.extend(extracted_mentions)
-        
         except Exception as e:
             logger.error(f"OpenAI search failed: {e}")
-        
         return mentions
 
     async def _search_anthropic(self, brand_name: str, keywords: List[str]) -> List[BrandMention]:
-        """Search for brand mentions using Anthropic Claude"""
         mentions = []
-        
         try:
             search_prompts = self._generate_search_prompts(brand_name, keywords)
-            
             for prompt in search_prompts:
                 response = await asyncio.to_thread(
-                    self.anthropic_client.messages.create,
-                    model="claude-3-haiku-20240307",
-                    max_tokens=1000,
-                    messages=[
+                    call_openrouter,
+                    [
                         {"role": "user", "content": prompt}
-                    ]
+                    ],
+                    "anthropic/claude-3-haiku"
                 )
-                
-                content = response.content[0].text
-                
+                content = response["choices"][0]["message"]["content"]
                 extracted_mentions = self._extract_mentions_from_response(
                     content, brand_name, keywords, AIProvider.ANTHROPIC.value
                 )
                 mentions.extend(extracted_mentions)
-        
         except Exception as e:
             logger.error(f"Anthropic search failed: {e}")
-        
         return mentions
 
     async def _search_google(self, brand_name: str, keywords: List[str]) -> List[BrandMention]:
-        """Search for brand mentions using Google Gemini"""
         mentions = []
-        
         try:
             search_prompts = self._generate_search_prompts(brand_name, keywords)
-            
             for prompt in search_prompts:
                 response = await asyncio.to_thread(
-                    self.google_client.generate_content,
-                    prompt
+                    call_openrouter,
+                    [
+                        {"role": "user", "content": prompt}
+                    ],
+                    "google/gemini-flash-1.5"
                 )
-                
-                content = response.text
-                
+                content = response["choices"][0]["message"]["content"]
                 extracted_mentions = self._extract_mentions_from_response(
                     content, brand_name, keywords, AIProvider.GOOGLE.value
                 )
                 mentions.extend(extracted_mentions)
-        
         except Exception as e:
             logger.error(f"Google search failed: {e}")
-        
         return mentions
 
     def _generate_search_prompts(self, brand_name: str, keywords: List[str]) -> List[str]:
-        """Generate search prompts for AI platforms"""
+        """Generate search prompts for AI platforms - optimized for cost"""
         keyword_str = ", ".join(keywords)
         
+        # Single optimized prompt per provider for cost efficiency
         prompts = [
-            f"Search your knowledge base for recent mentions, discussions, news, and information about {brand_name}. Focus on content related to: {keyword_str}. Provide specific examples with context, sentiment analysis, and any referenced sources or links.",
-            
-            f"What are people saying about {brand_name} in relation to {keyword_str}? Include both positive and negative mentions, recent developments, and any notable discussions or controversies.",
-            
-            f"Analyze the public perception and brand reputation of {brand_name}, particularly focusing on {keyword_str}. Include specific examples of mentions, customer feedback, and media coverage.",
-            
-            f"Find information about {brand_name} that relates to {keyword_str}. Look for product reviews, news articles, social media discussions, and expert opinions. Include source context where available.",
-            
-            f"What recent developments, announcements, or news stories mention {brand_name} in connection with {keyword_str}? Provide detailed summaries and sentiment analysis."
+            f"Analyze {brand_name} brand reputation: key strengths, weaknesses, recent developments, and public sentiment. Be concise but comprehensive."
         ]
         
         return prompts
@@ -369,6 +372,59 @@ class BrandIntelligenceEngine:
         
         total_score = volume_score + sentiment_score + confidence_score + source_score
         return min(100.0, max(0.0, total_score))
+
+    def _generate_cache_key(self, brand_name: str, keywords: List[str]) -> str:
+        """Generate a cache key for the search"""
+        content = f"{brand_name}:{':'.join(sorted(keywords))}"
+        return hashlib.md5(content.encode()).hexdigest()
+
+    def _get_from_cache(self, cache_key: str) -> Optional[BrandAnalysis]:
+        """Get result from cache if it exists and is not expired"""
+        if cache_key in self.cache:
+            cached_data, timestamp = self.cache[cache_key]
+            if time.time() - timestamp < self.cache_duration:
+                return cached_data
+            else:
+                # Remove expired cache entry
+                del self.cache[cache_key]
+        return None
+
+    def _cache_result(self, cache_key: str, analysis: BrandAnalysis):
+        """Cache the analysis result"""
+        self.cache[cache_key] = (analysis, time.time())
+
+    def _check_rate_limit(self) -> bool:
+        """Check if we're within rate limits"""
+        current_minute = int(time.time() / 60)
+        if current_minute not in self.rate_limit:
+            self.rate_limit[current_minute] = 0
+        
+        # Clean old entries
+        for minute in list(self.rate_limit.keys()):
+            if minute < current_minute - 1:
+                del self.rate_limit[minute]
+        
+        if self.rate_limit[current_minute] >= self.max_calls_per_minute:
+            return False
+        
+        self.rate_limit[current_minute] += 1
+        return True
+
+    def _create_limited_result(self, brand_name: str) -> BrandAnalysis:
+        """Create a limited result when rate limited"""
+        return BrandAnalysis(
+            brand_name=brand_name,
+            total_mentions=0,
+            sentiment_distribution={'positive': 0, 'neutral': 0, 'negative': 0},
+            visibility_score=0.0,
+            mentions=[],
+            analysis_metadata={
+                'providers_used': [],
+                'search_timestamp': datetime.now(),
+                'rate_limited': True,
+                'message': 'Rate limit exceeded. Please try again in a minute.'
+            }
+        )
 
 # Global instance
 brand_intelligence = BrandIntelligenceEngine()

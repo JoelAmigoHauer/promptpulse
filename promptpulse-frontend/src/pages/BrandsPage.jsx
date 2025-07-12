@@ -1,33 +1,56 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { searchBrand } from '../services/api'
 
 function BrandsPage({ onLogout }) {
-  const [brands] = useState([
-    {
-      id: 1,
-      name: "TechCorp",
-      description: "Technology solutions company",
-      keywords: ["TechCorp", "tech solutions"],
-      mentions: 156,
-      sentiment: { positive: 70, neutral: 20, negative: 10 }
-    },
-    {
-      id: 2,
-      name: "EcoGreen",
-      description: "Sustainable products company",
-      keywords: ["EcoGreen", "sustainable"],
-      mentions: 89,
-      sentiment: { positive: 80, neutral: 15, negative: 5 }
-    },
-    {
-      id: 3,
-      name: "FinanceFirst",
-      description: "Financial services provider",
-      keywords: ["FinanceFirst", "banking"],
-      mentions: 134,
-      sentiment: { positive: 60, neutral: 30, negative: 10 }
+  const [brand, setBrand] = useState('Tesla')
+  const [results, setResults] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [savedSearches, setSavedSearches] = useState([])
+  const [searchHistory, setSearchHistory] = useState([])
+
+  const handleSearch = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+    try {
+      const data = await searchBrand(brand)
+      setResults(data)
+      
+      // Add to search history
+      const newHistoryItem = {
+        brand: brand,
+        timestamp: new Date().toISOString(),
+        mentions: data.total_mentions,
+        visibility: data.visibility_score
+      }
+      setSearchHistory(prev => [newHistoryItem, ...prev.slice(0, 9)]) // Keep last 10
+      
+    } catch (err) {
+      setError(err.message)
+      setResults(null)
+    } finally {
+      setLoading(false)
     }
-  ])
+  }
+
+  const saveSearch = () => {
+    if (results && !savedSearches.find(s => s.brand === brand)) {
+      const savedItem = {
+        brand: brand,
+        timestamp: new Date().toISOString(),
+        mentions: results.total_mentions,
+        visibility: results.visibility_score,
+        sentiment: results.sentiment_distribution
+      }
+      setSavedSearches(prev => [...prev, savedItem])
+    }
+  }
+
+  const loadSavedSearch = (savedBrand) => {
+    setBrand(savedBrand)
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -57,55 +80,144 @@ function BrandsPage({ onLogout }) {
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Brand Management</h2>
-            <button className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
-              Add Brand
-            </button>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {brands.map((brand) => (
-              <div key={brand.id} className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{brand.name}</h3>
-                <p className="text-gray-600 mb-4">{brand.description}</p>
-                
-                <div className="mb-4">
-                  <p className="text-sm text-gray-500 mb-1">Keywords:</p>
-                  <div className="flex flex-wrap gap-1">
-                    {brand.keywords.map((keyword, index) => (
-                      <span key={index} className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs">
-                        {keyword}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                
-                <div className="mb-4">
-                  <p className="text-sm text-gray-500">Total Mentions: <span className="font-semibold">{brand.mentions}</span></p>
-                </div>
-                
-                <div className="mb-4">
-                  <p className="text-sm text-gray-500 mb-2">Sentiment:</p>
-                  <div className="flex space-x-2 text-xs">
-                    <span className="text-green-600">Positive: {brand.sentiment.positive}%</span>
-                    <span className="text-yellow-600">Neutral: {brand.sentiment.neutral}%</span>
-                    <span className="text-red-600">Negative: {brand.sentiment.negative}%</span>
-                  </div>
-                </div>
-                
-                <div className="flex space-x-2">
-                  <button className="flex-1 bg-gray-100 text-gray-700 py-2 rounded hover:bg-gray-200 text-sm">
-                    Edit
-                  </button>
-                  <button className="flex-1 bg-purple-600 text-white py-2 rounded hover:bg-purple-700 text-sm">
-                    View Details
-                  </button>
+      <div className="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Sidebar */}
+          <div className="lg:col-span-1">
+            {/* Search History */}
+            {searchHistory.length > 0 && (
+              <div className="bg-white p-4 rounded-lg shadow mb-4">
+                <h3 className="text-lg font-semibold mb-3">Recent Searches</h3>
+                <div className="space-y-2">
+                  {searchHistory.slice(0, 5).map((item, idx) => (
+                    <div key={idx} className="flex justify-between items-center p-2 bg-gray-50 rounded cursor-pointer hover:bg-gray-100"
+                         onClick={() => loadSavedSearch(item.brand)}>
+                      <span className="font-medium">{item.brand}</span>
+                      <span className="text-xs text-gray-500">{item.mentions}m</span>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
+            )}
+            
+            {/* Saved Searches */}
+            {savedSearches.length > 0 && (
+              <div className="bg-white p-4 rounded-lg shadow">
+                <h3 className="text-lg font-semibold mb-3">Saved Searches</h3>
+                <div className="space-y-2">
+                  {savedSearches.map((item, idx) => (
+                    <div key={idx} className="p-3 bg-blue-50 rounded">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium cursor-pointer hover:text-blue-600"
+                              onClick={() => loadSavedSearch(item.brand)}>{item.brand}</span>
+                        <span className="text-xs text-gray-500">⭐</span>
+                      </div>
+                      <div className="text-xs text-gray-600 mt-1">
+                        {item.mentions} mentions • {item.visibility.toFixed(1)} score
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Main Content */}
+          <div className="lg:col-span-3">
+            <div className="bg-white p-8 rounded-lg shadow">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Brand Intelligence Search</h2>
+              <form onSubmit={handleSearch} className="flex items-center gap-4 mb-6">
+                <input
+                  type="text"
+                  value={brand}
+                  onChange={e => setBrand(e.target.value)}
+                  className="border border-gray-300 rounded px-3 py-2 flex-1"
+                  placeholder="Enter brand name (e.g. Tesla, Apple, Google)"
+                />
+                <button
+                  type="submit"
+                  className="bg-purple-600 text-white px-6 py-2 rounded hover:bg-purple-700 font-semibold"
+                  disabled={loading}
+                >
+                  {loading ? 'Analyzing...' : 'Search'}
+                </button>
+                {results && (
+                  <button
+                    type="button"
+                    onClick={saveSearch}
+                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                    disabled={savedSearches.find(s => s.brand === brand)}
+                  >
+                    Save
+                  </button>
+                )}
+              </form>
+          {error && <div className="text-red-600 mb-4">{error}</div>}
+          {results && (
+            <div>
+              <div className="mb-6">
+                <h3 className="text-xl font-semibold text-gray-800 mb-2">{results.brand_name || brand} Results</h3>
+                <div className="flex flex-wrap gap-6 mb-2">
+                  <div>
+                    <span className="text-gray-500">Total Mentions: </span>
+                    <span className="font-bold text-purple-700">{results.total_mentions}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Visibility Score: </span>
+                    <span className="font-bold text-green-600">{results.visibility_score}</span>
+                  </div>
+                </div>
+                <div className="flex gap-4 mb-2">
+                  <div className="text-green-600">Positive: {results.sentiment_distribution?.positive || 0}</div>
+                  <div className="text-yellow-600">Neutral: {results.sentiment_distribution?.neutral || 0}</div>
+                  <div className="text-red-600">Negative: {results.sentiment_distribution?.negative || 0}</div>
+                </div>
+              </div>
+              <div>
+                <h4 className="text-lg font-semibold mb-2">Mentions</h4>
+                <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {results.mentions && results.mentions.length > 0 ? (
+                    (() => {
+                      // Get a mix of providers for better display
+                      const openaiMentions = results.mentions.filter(m => m.provider === 'openai').slice(0, 4);
+                      const anthropicMentions = results.mentions.filter(m => m.provider === 'anthropic').slice(0, 4);
+                      const googleMentions = results.mentions.filter(m => m.provider === 'google').slice(0, 4);
+                      const mixedMentions = [...openaiMentions, ...anthropicMentions, ...googleMentions];
+                      return mixedMentions.map((mention, idx) => (
+                      <div key={idx} className="border rounded p-4 bg-gray-50">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="font-semibold text-purple-700">{mention.provider?.toUpperCase() || 'AI'}</span>
+                          <span className="text-xs text-gray-500">Sentiment: <span className={
+                            mention.sentiment_label === 'positive' ? 'text-green-600' :
+                            mention.sentiment_label === 'negative' ? 'text-red-600' :
+                            'text-yellow-600'
+                          }>{mention.sentiment_label}</span></span>
+                          <span className="text-xs text-gray-500">Confidence: {mention.confidence}</span>
+                        </div>
+                        <div className="mb-2 text-gray-800">{mention.content?.slice(0, 300)}{mention.content?.length > 300 ? '...' : ''}</div>
+                        <div className="flex flex-wrap gap-2 text-xs">
+                          {mention.keywords_found && mention.keywords_found.map((kw, i) => (
+                            <span key={i} className="bg-purple-100 text-purple-700 px-2 py-1 rounded">{kw}</span>
+                          ))}
+                        </div>
+                        {mention.source_urls && mention.source_urls.length > 0 && (
+                          <div className="mt-2 text-xs text-blue-600">
+                            Sources: {mention.source_urls.slice(0,2).map((url, i) => (
+                              <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="underline mr-2">{url}</a>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ));
+                    })()
+                  ) : (
+                    <div className="text-gray-500">No mentions found.</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+            </div>
           </div>
         </div>
       </div>

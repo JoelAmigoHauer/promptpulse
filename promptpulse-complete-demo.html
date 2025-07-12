@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PromptPulse - Complete AEO Platform Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+        
+        @keyframes celebration-bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-20px); }
+            60% { transform: translateY(-10px); }
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(59, 130, 246, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.8); }
+        }
+        
+        .confetti-particle {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: #3B82F6;
+            animation: confetti-fall 3s linear forwards;
+            z-index: 1000;
+        }
+        
+        .celebration-modal {
+            animation: celebration-bounce 0.6s ease-out;
+        }
+        
+        .challenge-button {
+            transition: all 0.3s ease;
+        }
+        
+        .challenge-button:hover {
+            animation: pulse-glow 1s infinite;
+        }
+        
+        .real-time-indicator {
+            animation: pulse 2s infinite;
+        }
+        
+        .sidebar-active {
+            background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- Navigation Header -->
+    <nav class="bg-white border-b border-gray-200 fixed w-full top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
+                            <span class="text-white font-bold text-lg">P</span>
+                        </div>
+                        <span class="text-xl font-bold text-gray-900">PromptPulse</span>
+                        <span class="ml-2 text-sm text-gray-500">AEO Platform</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2 bg-green-50 px-3 py-1 rounded-full">
+                        <div class="w-2 h-2 bg-green-500 rounded-full real-time-indicator"></div>
+                        <span class="text-sm text-green-700 font-medium">Live Monitoring</span>
+                    </div>
+                    <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        Generate Brief
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="flex pt-16">
+        <!-- Sidebar -->
+        <div class="w-64 bg-white h-screen shadow-sm border-r border-gray-200 fixed">
+            <div class="p-6">
+                <nav class="space-y-2">
+                    <a href="#dashboard" class="sidebar-active text-white px-3 py-2 rounded-lg flex items-center space-x-3 transition-all">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                        </svg>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="#rankings" class="text-gray-700 hover:bg-gray-100 px-3 py-2 rounded-lg flex items-center space-x-3 transition-all">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
+                        </svg>
+                        <span>Rankings</span>
+                    </a>
+                    <a href="#mentions" class="text-gray-700 hover:bg-gray-100 px-3 py-2 rounded-lg flex items-center space-x-3 transition-all">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Mentions</span>
+                    </a>
+                    <a href="#sources" class="text-gray-700 hover:bg-gray-100 px-3 py-2 rounded-lg flex items-center space-x-3 transition-all">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Sources</span>
+                    </a>
+                    <a href="#prompts" class="text-gray-700 hover:bg-gray-100 px-3 py-2 rounded-lg flex items-center space-x-3 transition-all">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 3a1 1 0 00-1.447-.894L8.763 6H5a3 3 0 000 6h.28l1.771 5.316A1 1 0 008 18h1a1 1 0 001-1v-4.382l6.553 3.894A1 1 0 0018 16V3z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Prompts</span>
+                    </a>
+                    <a href="#competitors" class="text-gray-700 hover:bg-gray-100 px-3 py-2 rounded-lg flex items-center space-x-3 transition-all">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                        </svg>
+                        <span>Competitors</span>
+                    </a>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="ml-64 flex-1">
+            <!-- Dashboard Section -->
+            <div id="dashboard" class="p-8">
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">AEO Dashboard</h1>
+                    <p class="text-lg text-gray-600">Comprehensive AI Engine Optimization platform for competitive analysis</p>
+                </div>
+
+                <!-- Overview Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Total Rankings</p>
+                                <p class="text-3xl font-bold text-gray-900">247</p>
+                                <p class="text-sm text-green-600 flex items-center mt-1">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    +12% this week
+                                </p>
+                            </div>
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Brand Mentions</p>
+                                <p class="text-3xl font-bold text-gray-900">156</p>
+                                <p class="text-sm text-green-600 flex items-center mt-1">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    +18% today
+                                </p>
+                            </div>
+                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Authority Score</p>
+                                <p class="text-3xl font-bold text-gray-900">87</p>
+                                <p class="text-sm text-blue-600 flex items-center mt-1">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    +5 points
+                                </p>
+                            </div>
+                            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Opportunities</p>
+                                <p class="text-3xl font-bold text-gray-900">23</p>
+                                <p class="text-sm text-orange-600 flex items-center mt-1">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
+                                    </svg>
+                                    High priority
+                                </p>
+                            </div>
+                            <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Hub - Tabbed Interface -->
+                <div class="bg-white rounded-lg border border-gray-200 shadow-sm mb-8">
+                    <div class="border-b border-gray-200">
+                        <nav class="-mb-px flex">
+                            <button class="tab-button active border-b-2 border-blue-500 py-4 px-6 text-sm font-medium text-blue-600" data-tab="gaps">
+                                Content Gaps
+                            </button>
+                            <button class="tab-button border-b-2 border-transparent py-4 px-6 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="briefs">
+                                Brief Generation
+                            </button>
+                            <button class="tab-button border-b-2 border-transparent py-4 px-6 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="grader">
+                                Content Grader
+                            </button>
+                        </nav>
+                    </div>
+
+                    <div class="p-6">
+                        <!-- Content Gaps Tab -->
+                        <div id="gaps-tab" class="tab-content">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">High-Priority Content Opportunities</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <!-- Content Gap Card 1 -->
+                                <div class="border-2 border-blue-200 bg-blue-50 rounded-lg p-6 hover:shadow-lg transition-all duration-200 relative overflow-hidden">
+                                    <div class="absolute top-0 right-0 w-32 h-32 opacity-5">
+                                        <svg class="w-full h-full" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </div>
+                                    
+                                    <div class="flex items-start justify-between mb-4 relative z-10">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="p-2 rounded-lg bg-white shadow-sm">
+                                                <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <div class="text-sm font-medium text-gray-600">Content Gap</div>
+                                                <div class="text-xs px-2 py-1 rounded-full font-medium bg-blue-100 text-blue-800">
+                                                    High Priority
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-xs text-gray-500">Authority</div>
+                                            <div class="flex items-center space-x-1">
+                                                <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M6.672 1.911a1 1 0 10-1.932.518l.259.966a1 1 0 001.932-.518l-.26-.966zM2.429 4.74a1 1 0 10-.517 1.932l.966.259a1 1 0 00.517-1.932l-.966-.26zm8.814-.569a1 1 0 00-1.415-1.414l-.707.707a1 1 0 101.415 1.415l.707-.708zm-7.071 7.072l.707-.707A1 1 0 003.465 9.12l-.708.707a1 1 0 001.415 1.415zm3.2-5.171a1 1 0 00-1.3 1.3l4 10a1 1 0 001.823.075l1.38-2.759 3.018 3.02a1 1 0 001.414-1.415l-3.019-3.02 2.76-1.379a1 1 0 00-.076-1.822l-10-4z" clip-rule="evenodd"/>
+                                                </svg>
+                                                <span class="text-sm font-bold text-blue-600">Builder</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <h3 class="text-lg font-semibold text-gray-900 mb-2">
+                                            Content Gap: "EV truck towing capacity"
+                                        </h3>
+                                        <p class="text-sm text-gray-700 leading-relaxed">
+                                            Ford currently dominates this prompt. Create comprehensive towing guide to capture rankings.
+                                        </p>
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-4 mb-4">
+                                        <div class="bg-white rounded-lg p-3 shadow-sm">
+                                            <div class="text-xs text-gray-500 font-medium">Monthly Volume</div>
+                                            <div class="text-lg font-bold text-gray-900">12,400</div>
+                                        </div>
+                                        <div class="bg-white rounded-lg p-3 shadow-sm">
+                                            <div class="text-xs text-gray-500 font-medium">Competitors</div>
+                                            <div class="text-lg font-bold text-gray-900">4</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-3">
+                                        <button class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-all duration-200 flex items-center justify-center space-x-2 group shadow-sm" onclick="showContentGrader()">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
+                                            </svg>
+                                            <span>Generate Content Brief</span>
+                                            <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                            </svg>
+                                        </button>
+                                        
+                                        <div class="flex justify-center">
+                                            <button class="challenge-button bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-all text-sm">
+                                                🎯 Challenge Ford
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Content Gap Card 2 -->
+                                <div class="border-2 border-green-200 bg-green-50 rounded-lg p-6 hover:shadow-lg transition-all duration-200">
+                                    <div class="flex items-start justify-between mb-4">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="p-2 rounded-lg bg-white shadow-sm">
+                                                <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <div class="text-sm font-medium text-gray-600">Content Gap</div>
+                                                <div class="text-xs px-2 py-1 rounded-full font-medium bg-green-100 text-green-800">
+                                                    Medium Priority
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <h3 class="text-lg font-semibold text-gray-900 mb-2">
+                                            "Electric vehicle reliability data"
+                                        </h3>
+                                        <p class="text-sm text-gray-700 leading-relaxed">
+                                            Consumer Reports leads here. Opportunity to create data-driven reliability content.
+                                        </p>
+                                    </div>
+
+                                    <button class="w-full bg-green-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 transition-colors">
+                                        Generate Brief
+                                    </button>
+                                </div>
+
+                                <!-- Content Gap Card 3 -->
+                                <div class="border-2 border-purple-200 bg-purple-50 rounded-lg p-6 hover:shadow-lg transition-all duration-200">
+                                    <div class="flex items-start justify-between mb-4">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="p-2 rounded-lg bg-white shadow-sm">
+                                                <svg class="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <div class="text-sm font-medium text-gray-600">Content Gap</div>
+                                                <div class="text-xs px-2 py-1 rounded-full font-medium bg-purple-100 text-purple-800">
+                                                    Low Priority
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <h3 class="text-lg font-semibold text-gray-900 mb-2">
+                                            "EV adventure capabilities"
+                                        </h3>
+                                        <p class="text-sm text-gray-700 leading-relaxed">
+                                            Rivian currently dominates. Create adventure-focused content for outdoor enthusiasts.
+                                        </p>
+                                    </div>
+
+                                    <button class="w-full bg-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-purple-700 transition-colors">
+                                        Generate Brief
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Brief Generation Tab -->
+                        <div id="briefs-tab" class="tab-content hidden">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">AI-Powered Brief Generation</h3>
+                            <div class="max-w-2xl">
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Prompt</label>
+                                    <input type="text" placeholder="Enter prompt to generate brief for..." class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" value="EV truck towing capacity">
+                                </div>
+                                <button class="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                                    Generate Strategic Brief
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Content Grader Tab -->
+                        <div id="grader-tab" class="tab-content hidden">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Content Performance Grader</h3>
+                            <div class="max-w-2xl">
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Content to Grade</label>
+                                    <textarea placeholder="Paste your content here..." rows="6" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                                </div>
+                                <button class="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors" onclick="showCelebration()">
+                                    Grade Content
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                    <!-- Rankings Summary -->
+                    <div class="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
+                            </svg>
+                            Top Rankings
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">EV charging network</span>
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">#1</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Electric vehicle financing</span>
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">#2</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Tesla Model 3 review</span>
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">#3</span>
+                            </div>
+                        </div>
+                        <button class="w-full mt-4 text-blue-600 hover:text-blue-800 text-sm font-medium" onclick="showSection('rankings')">
+                            View All Rankings →
+                        </button>
+                    </div>
+
+                    <!-- Recent Mentions -->
+                    <div class="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/>
+                            </svg>
+                            Live Mentions
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="p-3 bg-green-50 border border-green-200 rounded-lg">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-xs font-medium text-green-700">ChatGPT</span>
+                                    <span class="text-xs text-gray-500">2m ago</span>
+                                </div>
+                                <p class="text-sm text-gray-800">Tesla's supercharger network is the most reliable...</p>
+                            </div>
+                            <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-xs font-medium text-blue-700">Claude</span>
+                                    <span class="text-xs text-gray-500">5m ago</span>
+                                </div>
+                                <p class="text-sm text-gray-800">Tesla Model 3 offers excellent value with federal...</p>
+                            </div>
+                        </div>
+                        <button class="w-full mt-4 text-green-600 hover:text-green-800 text-sm font-medium" onclick="showSection('mentions')">
+                            View All Mentions →
+                        </button>
+                    </div>
+
+                    <!-- Competitor Analysis -->
+                    <div class="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                            </svg>
+                            Top Competitors
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Ford</span>
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">High Threat</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">GM</span>
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Medium</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Rivian</span>
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Low Threat</span>
+                            </div>
+                        </div>
+                        <button class="w-full mt-4 text-purple-600 hover:text-purple-800 text-sm font-medium" onclick="showSection('competitors')">
+                            View Analysis →
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rankings Section -->
+            <div id="rankings" class="p-8 hidden">
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2 flex items-center">
+                        <svg class="w-8 h-8 mr-3 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
+                        </svg>
+                        Competitive Rankings
+                    </h1>
+                    <p class="text-lg text-gray-600">Analyze your competitive landscape and identify content opportunities</p>
+                </div>
+
+                <!-- Bubble Chart Visualization -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6 mb-8">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Competitive Landscape: Opportunity vs. Difficulty</h3>
+                    <div class="h-96 flex items-center justify-center bg-gray-50 rounded-lg">
+                        <canvas id="bubbleChart" width="800" height="400"></canvas>
+                    </div>
+                    <div class="mt-4 flex items-center justify-center space-x-6 text-sm">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-4 h-4 rounded-full bg-green-500"></div>
+                            <span>#1 Ranking</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-4 h-4 rounded-full bg-blue-500"></div>
+                            <span>Top 3</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-4 h-4 rounded-full bg-yellow-500"></div>
+                            <span>Top 5</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-4 h-4 rounded-full bg-red-500"></div>
+                            <span>Below Top 5</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rankings Table -->
+                <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-900">Detailed Rankings</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prompt</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rank</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Search Volume</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Opportunity</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-gray-900">electric vehicle financing</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">#2</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">15,400</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="w-16 bg-gray-200 rounded-full h-2 mr-2 inline-block">
+                                            <div class="bg-green-600 h-2 rounded-full" style="width: 89%"></div>
+                                        </div>
+                                        <span class="text-sm text-gray-900">89</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <button class="challenge-button bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">
+                                            🎯 Challenge Ford
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-gray-900">EV charging network</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">#1</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">22,100</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="w-16 bg-gray-200 rounded-full h-2 mr-2 inline-block">
+                                            <div class="bg-green-600 h-2 rounded-full" style="width: 95%"></div>
+                                        </div>
+                                        <span class="text-sm text-gray-900">95</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <button class="bg-green-600 text-white px-3 py-1 rounded text-sm">
+                                            ✅ Maintain Lead
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mentions Section -->
+            <div id="mentions" class="p-8 hidden">
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2 flex items-center">
+                        <svg class="w-8 h-8 mr-3 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/>
+                        </svg>
+                        Brand Mentions
+                    </h1>
+                    <p class="text-lg text-gray-600">Monitor real-time brand mentions across AI platforms</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Main Mentions Feed -->
+                    <div class="lg:col-span-2">
+                        <div class="space-y-6">
+                            <div class="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                                <div class="flex items-start justify-between mb-4">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="flex items-center space-x-2 px-3 py-1 rounded-full text-sm font-medium bg-green-50 text-green-700">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
+                                            </svg>
+                                            <span>Positive (4.8)</span>
+                                        </div>
+                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-800">ChatGPT</span>
+                                        <span class="text-sm text-gray-500">14m ago</span>
+                                    </div>
+                                    <span class="text-xs text-gray-500">Confidence: 92%</span>
+                                </div>
+
+                                <div class="mb-4">
+                                    <p class="text-gray-900 leading-relaxed mb-3">Tesla's supercharger network is the most reliable for long-distance EV travel. The charging speed and station availability make it the clear leader in the space.</p>
+                                    <div class="flex items-center space-x-4 text-sm text-gray-600">
+                                        <span>Prompt: "best EV charging network"</span>
+                                        <span>Context: comparison query</span>
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <span class="text-sm font-medium text-gray-600 mr-2">Competitors mentioned:</span>
+                                    <div class="inline-flex flex-wrap gap-2">
+                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-red-50 text-red-700">ChargePoint</span>
+                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-red-50 text-red-700">Electrify America</span>
+                                    </div>
+                                </div>
+
+                                <div class="flex justify-end">
+                                    <button class="challenge-button bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-all text-sm">
+                                        🎯 Challenge ChargePoint
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                                <div class="flex items-start justify-between mb-4">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="flex items-center space-x-2 px-3 py-1 rounded-full text-sm font-medium bg-green-50 text-green-700">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
+                                            </svg>
+                                            <span>Positive (4.5)</span>
+                                        </div>
+                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-800">Claude</span>
+                                        <span class="text-sm text-gray-500">28m ago</span>
+                                    </div>
+                                    <span class="text-xs text-gray-500">Confidence: 89%</span>
+                                </div>
+
+                                <div class="mb-4">
+                                    <p class="text-gray-900 leading-relaxed mb-3">Tesla Model 3 offers excellent value with federal tax incentives. When considering the total cost of ownership, it becomes very competitive with traditional vehicles.</p>
+                                    <div class="flex items-center space-x-4 text-sm text-gray-600">
+                                        <span>Prompt: "electric vehicle tax incentives 2024"</span>
+                                        <span>Context: informational query</span>
+                                    </div>
+                                </div>
+
+                                <div class="flex justify-end">
+                                    <button class="challenge-button bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-all text-sm">
+                                        🎯 Challenge Ford
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Real-time Feed Sidebar -->
+                    <div class="space-y-6">
+                        <div class="bg-white rounded-lg border border-gray-200 p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                                    <svg class="w-5 h-5 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Live Feed
+                                </h3>
+                                <div class="flex items-center space-x-1">
+                                    <div class="w-2 h-2 bg-green-500 rounded-full real-time-indicator"></div>
+                                    <span class="text-xs text-gray-500">Live</span>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-3 max-h-80 overflow-y-auto">
+                                <div class="p-3 rounded-lg border border-green-200 bg-green-50">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-xs font-medium text-gray-600">ChatGPT</span>
+                                        <span class="text-xs text-gray-500">14:35</span>
+                                    </div>
+                                    <p class="text-sm text-gray-800 mb-2">Tesla leads in charging infrastructure...</p>
+                                    <p class="text-xs text-gray-600">"EV charging network comparison"</p>
+                                </div>
+                                
+                                <div class="p-3 rounded-lg border border-blue-200 bg-blue-50">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-xs font-medium text-gray-600">Claude</span>
+                                        <span class="text-xs text-gray-500">14:32</span>
+                                    </div>
+                                    <p class="text-sm text-gray-800 mb-2">Tesla Model Y pricing compared to...</p>
+                                    <p class="text-xs text-gray-600">"electric SUV comparison"</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sources Section -->
+            <div id="sources" class="p-8 hidden">
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2 flex items-center">
+                        <svg class="w-8 h-8 mr-3 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clip-rule="evenodd"/>
+                        </svg>
+                        Source Citations
+                    </h1>
+                    <p class="text-lg text-gray-600">Track URL citations and build your authority across AI platforms</p>
+                </div>
+
+                <!-- Sources List -->
+                <div class="space-y-6">
+                    <div class="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex-1">
+                                <h3 class="text-lg font-semibold text-gray-900 mb-2">Tesla Supercharger Network</h3>
+                                <p class="text-blue-600 text-sm mb-2">https://www.tesla.com/charging</p>
+                                <div class="flex items-center space-x-4 text-sm text-gray-600">
+                                    <span>Citations: 45</span>
+                                    <span>Authority: 95</span>
+                                    <span>Last cited: 2h ago</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Trending Up</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-4 mb-4">
+                            <span class="text-sm font-medium text-gray-600">Cited by:</span>
+                            <div class="flex space-x-2">
+                                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-800">ChatGPT</span>
+                                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-800">Claude</span>
+                                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-800">Gemini</span>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end">
+                            <button class="challenge-button bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-all text-sm">
+                                🎯 Build Authority
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prompts Section -->
+            <div id="prompts" class="p-8 hidden">
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2 flex items-center">
+                        <svg class="w-8 h-8 mr-3 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 3a1 1 0 00-1.447-.894L8.763 6H5a3 3 0 000 6h.28l1.771 5.316A1 1 0 008 18h1a1 1 0 001-1v-4.382l6.553 3.894A1 1 0 0018 16V3z" clip-rule="evenodd"/>
+                        </svg>
+                        Prompts Management
+                    </h1>
+                    <p class="text-lg text-gray-600">Monitor and optimize your AI search prompt performance</p>
+                </div>
+
+                <!-- Prompts List -->
+                <div class="space-y-4">
+                    <div class="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex-1">
+                                <h3 class="text-lg font-semibold text-gray-900 mb-2">electric vehicle financing options</h3>
+                                <div class="flex items-center space-x-3 mb-3">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">active</span>
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">high opportunity</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- AI Sources Performance */
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div class="p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-sm font-medium text-gray-700">ChatGPT</span>
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">#2</span>
+                                </div>
+                                <div class="text-xs text-gray-600">Frequency: 78%</div>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-sm font-medium text-gray-700">Claude</span>
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">#1</span>
+                                </div>
+                                <div class="text-xs text-gray-600">Frequency: 85%</div>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-sm font-medium text-gray-700">Gemini</span>
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">#3</span>
+                                </div>
+                                <div class="text-xs text-gray-600">Frequency: 62%</div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-500">Cluster: EV Financing</span>
+                            <div class="flex items-center space-x-3">
+                                <button class="challenge-button bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">
+                                    🎯 Challenge Top Competitor
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Competitors Section -->
+            <div id="competitors" class="p-8 hidden">
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2 flex items-center">
+                        <svg class="w-8 h-8 mr-3 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                        </svg>
+                        Competitive Intelligence
+                    </h1>
+                    <p class="text-lg text-gray-600">Monitor competitors and identify strategic opportunities</p>
+                </div>
+
+                <!-- Competitors List -->
+                <div class="space-y-6">
+                    <div class="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-3 mb-2">
+                                    <h3 class="text-xl font-semibold text-gray-900">Ford</h3>
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border border-red-200 text-red-600 bg-red-50">High Threat</span>
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">Strong Position</span>
+                                </div>
+                                <p class="text-gray-600 mb-3">Traditional automaker transitioning to electric vehicles with strong truck lineup</p>
+                            </div>
+                        </div>
+
+                        <!-- Strengths and Weaknesses -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-600 mb-2 flex items-center">
+                                    <svg class="w-4 h-4 mr-1 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Strengths
+                                </h4>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-50 text-green-700">EV trucks</span>
+                                    <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-50 text-green-700">Dealership network</span>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-600 mb-2 flex items-center">
+                                    <svg class="w-4 h-4 mr-1 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Weaknesses
+                                </h4>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-red-50 text-red-700">Charging infrastructure</span>
+                                    <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-red-50 text-red-700">Software integration</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end">
+                            <button class="challenge-button bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-all text-sm">
+                                🎯 Challenge Ford
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Celebration Modal -->
+    <div id="celebrationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="celebration-modal bg-white rounded-lg shadow-xl max-w-md w-full p-8 text-center">
+            <div class="mb-6">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 mb-2">Content Grade Improved!</h3>
+                <p class="text-gray-600 mb-4">Your content grade improved from C to A</p>
+                <div class="flex items-center justify-center space-x-4 mb-4">
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-red-600">C</div>
+                        <div class="text-sm text-gray-500">Before</div>
+                    </div>
+                    <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                    </svg>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-green-600">A</div>
+                        <div class="text-sm text-gray-500">After</div>
+                    </div>
+                </div>
+            </div>
+            <button onclick="hideCelebration()" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                Continue
+            </button>
+        </div>
+    </div>
+
+    <!-- Content Grader Modal -->
+    <div id="contentGraderModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-screen overflow-y-auto">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-2xl font-bold text-gray-900">Content Grader</h2>
+                    <button onclick="hideContentGrader()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="p-6">
+                <div class="border-b border-gray-200 mb-6">
+                    <nav class="-mb-px flex space-x-8">
+                        <button class="grader-tab-button border-b-2 border-blue-500 py-2 px-1 text-sm font-medium text-blue-600" data-tab="input">
+                            Content Input
+                        </button>
+                        <button class="grader-tab-button border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700" data-tab="analysis">
+                            AI Analysis
+                        </button>
+                        <button class="grader-tab-button border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700" data-tab="optimization">
+                            Optimization Guide
+                        </button>
+                        <button class="grader-tab-button border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700" data-tab="tracking">
+                            Performance Tracking
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Content Input Tab -->
+                <div id="input-grader-tab" class="grader-tab-content">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Prompt</label>
+                            <input type="text" value="EV truck towing capacity" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Content to Grade</label>
+                            <textarea rows="8" placeholder="Paste your content here..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">Electric vehicle trucks are becoming increasingly popular for their towing capabilities. Tesla's Cybertruck, Ford's F-150 Lightning, and Rivian's R1T all offer impressive towing capacities. When comparing these vehicles, it's important to consider not just the maximum towing weight, but also range impact, charging infrastructure, and real-world performance.</textarea>
+                        </div>
+                        <button onclick="showCelebration()" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                            Analyze Content
+                        </button>
+                    </div>
+                </div>
+
+                <!-- AI Analysis Tab -->
+                <div id="analysis-grader-tab" class="grader-tab-content hidden">
+                    <div class="space-y-6">
+                        <div class="bg-gray-50 rounded-lg p-6">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Content Grade: A</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="text-center">
+                                    <div class="text-2xl font-bold text-green-600">92</div>
+                                    <div class="text-sm text-gray-600">Authority Score</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-2xl font-bold text-blue-600">88</div>
+                                    <div class="text-sm text-gray-600">Relevance Score</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-2xl font-bold text-purple-600">85</div>
+                                    <div class="text-sm text-gray-600">Completeness</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-medium text-gray-900 mb-2">Strengths</h4>
+                            <ul class="space-y-1 text-sm text-gray-600">
+                                <li>• Covers multiple EV truck models</li>
+                                <li>• Mentions key considerations (range, charging)</li>
+                                <li>• Good structure and readability</li>
+                            </ul>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-medium text-gray-900 mb-2">Improvement Areas</h4>
+                            <ul class="space-y-1 text-sm text-gray-600">
+                                <li>• Add specific towing capacity numbers</li>
+                                <li>• Include real-world testing data</li>
+                                <li>• Expand on charging implications</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Optimization Guide Tab -->
+                <div id="optimization-grader-tab" class="grader-tab-content hidden">
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-semibold text-gray-900">Optimization Recommendations</h3>
+                        <div class="space-y-3">
+                            <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                <h4 class="font-medium text-blue-900 mb-2">Add Specific Data</h4>
+                                <p class="text-sm text-blue-800">Include exact towing capacities: Cybertruck (11,000 lbs), F-150 Lightning (10,000 lbs), R1T (11,000 lbs)</p>
+                            </div>
+                            <div class="p-4 bg-green-50 border border-green-200 rounded-lg">
+                                <h4 class="font-medium text-green-900 mb-2">Enhance Authority</h4>
+                                <p class="text-sm text-green-800">Reference EPA testing data and independent reviews from automotive publications</p>
+                            </div>
+                            <div class="p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                                <h4 class="font-medium text-purple-900 mb-2">Improve Completeness</h4>
+                                <p class="text-sm text-purple-800">Add sections on: charging time while towing, winter performance, and cost comparisons</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance Tracking Tab -->
+                <div id="tracking-grader-tab" class="grader-tab-content hidden">
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-semibold text-gray-900">Performance Tracking</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="font-medium text-gray-900 mb-3">Grade History</h4>
+                                <div class="space-y-2">
+                                    <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                        <span class="text-sm text-gray-600">Previous version</span>
+                                        <span class="font-medium text-red-600">C (72)</span>
+                                    </div>
+                                    <div class="flex items-center justify-between p-2 bg-green-50 rounded">
+                                        <span class="text-sm text-gray-600">Current version</span>
+                                        <span class="font-medium text-green-600">A (88)</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-900 mb-3">AI Platform Performance</h4>
+                                <div class="space-y-2">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm text-gray-600">ChatGPT</span>
+                                        <span class="text-sm font-medium text-gray-900">Rank #3</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm text-gray-600">Claude</span>
+                                        <span class="text-sm font-medium text-gray-900">Rank #2</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm text-gray-600">Gemini</span>
+                                        <span class="text-sm font-medium text-gray-900">Rank #4</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab functionality
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const targetTab = button.getAttribute('data-tab');
+                
+                // Remove active class from all buttons
+                document.querySelectorAll('.tab-button').forEach(btn => {
+                    btn.classList.remove('border-blue-500', 'text-blue-600');
+                    btn.classList.add('border-transparent', 'text-gray-500');
+                });
+                
+                // Add active class to clicked button
+                button.classList.add('border-blue-500', 'text-blue-600');
+                button.classList.remove('border-transparent', 'text-gray-500');
+                
+                // Hide all tab content
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.add('hidden');
+                });
+                
+                // Show target tab content
+                document.getElementById(targetTab + '-tab').classList.remove('hidden');
+            });
+        });
+
+        // Grader tab functionality
+        document.querySelectorAll('.grader-tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const targetTab = button.getAttribute('data-tab');
+                
+                // Remove active class from all buttons
+                document.querySelectorAll('.grader-tab-button').forEach(btn => {
+                    btn.classList.remove('border-blue-500', 'text-blue-600');
+                    btn.classList.add('border-transparent', 'text-gray-500');
+                });
+                
+                // Add active class to clicked button
+                button.classList.add('border-blue-500', 'text-blue-600');
+                button.classList.remove('border-transparent', 'text-gray-500');
+                
+                // Hide all tab content
+                document.querySelectorAll('.grader-tab-content').forEach(content => {
+                    content.classList.add('hidden');
+                });
+                
+                // Show target tab content
+                document.getElementById(targetTab + '-grader-tab').classList.remove('hidden');
+            });
+        });
+
+        // Navigation functionality
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href').substring(1);
+                showSection(targetId);
+            });
+        });
+
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('[id]').forEach(section => {
+                if (section.id && section.id !== 'celebrationModal' && section.id !== 'contentGraderModal') {
+                    section.classList.add('hidden');
+                }
+            });
+            
+            // Show target section
+            const targetSection = document.getElementById(sectionId);
+            if (targetSection) {
+                targetSection.classList.remove('hidden');
+            }
+            
+            // Update sidebar active state
+            document.querySelectorAll('.sidebar-active').forEach(link => {
+                link.classList.remove('sidebar-active', 'text-white');
+                link.classList.add('text-gray-700', 'hover:bg-gray-100');
+            });
+            
+            const activeLink = document.querySelector(`a[href="#${sectionId}"]`);
+            if (activeLink) {
+                activeLink.classList.add('sidebar-active', 'text-white');
+                activeLink.classList.remove('text-gray-700', 'hover:bg-gray-100');
+            }
+        }
+
+        // Celebration animation
+        function showCelebration() {
+            // Show modal
+            document.getElementById('celebrationModal').classList.remove('hidden');
+            
+            // Create confetti particles
+            createConfetti();
+            
+            // Hide content grader modal if open
+            hideContentGrader();
+        }
+
+        function hideCelebration() {
+            document.getElementById('celebrationModal').classList.add('hidden');
+        }
+
+        function createConfetti() {
+            const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
+            
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti-particle';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDelay = Math.random() * 2 + 's';
+                confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                
+                document.body.appendChild(confetti);
+                
+                // Remove particle after animation
+                setTimeout(() => {
+                    confetti.remove();
+                }, 5000);
+            }
+        }
+
+        // Content Grader Modal
+        function showContentGrader() {
+            document.getElementById('contentGraderModal').classList.remove('hidden');
+        }
+
+        function hideContentGrader() {
+            document.getElementById('contentGraderModal').classList.add('hidden');
+        }
+
+        // Bubble Chart
+        function initBubbleChart() {
+            const ctx = document.getElementById('bubbleChart');
+            if (!ctx) return;
+
+            const data = {
+                datasets: [{
+                    label: 'Content Opportunities',
+                    data: [
+                        { x: 65, y: 89, r: 15, prompt: 'electric vehicle financing' },
+                        { x: 78, y: 95, r: 22, prompt: 'EV charging network' },
+                        { x: 45, y: 72, r: 12, prompt: 'electric vehicle tax incentives' },
+                        { x: 82, y: 68, r: 9, prompt: 'Tesla Model 3 review' },
+                        { x: 35, y: 85, r: 7, prompt: 'EV maintenance costs' }
+                    ],
+                    backgroundColor: function(context) {
+                        const y = context.parsed.y;
+                        if (y >= 90) return 'rgba(34, 197, 94, 0.7)';
+                        if (y >= 80) return 'rgba(59, 130, 246, 0.7)';
+                        if (y >= 70) return 'rgba(251, 191, 36, 0.7)';
+                        return 'rgba(239, 68, 68, 0.7)';
+                    },
+                    borderColor: function(context) {
+                        const y = context.parsed.y;
+                        if (y >= 90) return 'rgb(34, 197, 94)';
+                        if (y >= 80) return 'rgb(59, 130, 246)';
+                        if (y >= 70) return 'rgb(251, 191, 36)';
+                        return 'rgb(239, 68, 68)';
+                    },
+                    borderWidth: 2
+                }]
+            };
+
+            const options = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: (context) => context[0].raw.prompt,
+                            label: (context) => [
+                                `Opportunity Score: ${context.raw.y}`,
+                                `Difficulty: ${context.raw.x}`,
+                                `Search Volume: ${context.raw.r * 1000}`
+                            ]
+                        }
+                    },
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Difficulty Score'
+                        },
+                        min: 0,
+                        max: 100
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Opportunity Score'
+                        },
+                        min: 0,
+                        max: 100
+                    }
+                }
+            };
+
+            new Chart(ctx, {
+                type: 'scatter',
+                data: data,
+                options: options
+            });
+        }
+
+        // Initialize everything when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize bubble chart if Chart.js is available
+            if (typeof Chart !== 'undefined') {
+                initBubbleChart();
+            }
+            
+            // Show dashboard by default
+            showSection('dashboard');
+        });
+    </script>
+</body>
+</html>

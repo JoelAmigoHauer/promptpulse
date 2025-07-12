@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PromptPulse - Tabbed Action Hub Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        @keyframes pulse-success {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        
+        .pulse-success {
+            animation: pulse-success 2s ease-in-out infinite;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen flex">
+        <!-- Sidebar (same as before) -->
+        <div class="w-64 bg-white border-r border-gray-200 flex flex-col h-screen">
+            <!-- Workspace Selector -->
+            <div class="p-4 border-b border-gray-200">
+                <div class="relative">
+                    <button class="w-full flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors group">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center">
+                                <span class="text-white font-bold text-sm">T</span>
+                            </div>
+                            <div class="text-left">
+                                <div class="text-sm font-semibold text-gray-900">Tesla</div>
+                                <div class="text-xs text-gray-500">Workspace</div>
+                            </div>
+                        </div>
+                        <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Navigation Groups -->
+            <nav class="flex-1 overflow-y-auto">
+                <!-- General Group -->
+                <div>
+                    <div class="px-4 py-3">
+                        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide">General</h3>
+                    </div>
+                    <div class="px-2 pb-4">
+                        <button class="w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium bg-blue-50 text-blue-700">
+                            <i data-lucide="layout-dashboard" class="w-5 h-5 text-blue-600 mr-3"></i>
+                            <div class="text-left">
+                                <div class="font-medium">Dashboard</div>
+                                <div class="text-xs text-gray-500 mt-0.5">AEO Action Dashboard overview</div>
+                            </div>
+                        </button>
+                        <button class="w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 group">
+                            <i data-lucide="bar-chart-3" class="w-5 h-5 text-gray-400 group-hover:text-gray-600 mr-3"></i>
+                            <div class="text-left">
+                                <div class="font-medium">Rankings</div>
+                                <div class="text-xs text-gray-500 mt-0.5">Competitive landscape analysis</div>
+                            </div>
+                        </button>
+                        <button class="w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 group">
+                            <i data-lucide="link" class="w-5 h-5 text-gray-400 group-hover:text-gray-600 mr-3"></i>
+                            <div class="text-left">
+                                <div class="font-medium">Sources</div>
+                                <div class="text-xs text-gray-500 mt-0.5">URL citation tracking</div>
+                            </div>
+                        </button>
+                        <button class="w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 group">
+                            <i data-lucide="message-square" class="w-5 h-5 text-gray-400 group-hover:text-gray-600 mr-3"></i>
+                            <div class="text-left">
+                                <div class="font-medium">Prompts</div>
+                                <div class="text-xs text-gray-500 mt-0.5">Query and keyword management</div>
+                            </div>
+                        </button>
+                        <button class="w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 group">
+                            <i data-lucide="at-sign" class="w-5 h-5 text-gray-400 group-hover:text-gray-600 mr-3"></i>
+                            <div class="text-left">
+                                <div class="font-medium">Mentions</div>
+                                <div class="text-xs text-gray-500 mt-0.5">Real-time brand mentions feed</div>
+                            </div>
+                        </button>
+                        <button class="w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 group">
+                            <i data-lucide="users" class="w-5 h-5 text-gray-400 group-hover:text-gray-600 mr-3"></i>
+                            <div class="text-left">
+                                <div class="font-medium">Competitors</div>
+                                <div class="text-xs text-gray-500 mt-0.5">Competitor management</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Settings Group -->
+                <div class="border-t border-gray-200">
+                    <div class="px-4 py-3">
+                        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Settings</h3>
+                    </div>
+                    <div class="px-2 pb-4">
+                        <button class="w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 group">
+                            <i data-lucide="users-2" class="w-5 h-5 text-gray-400 group-hover:text-gray-600 mr-3"></i>
+                            <div class="text-left">
+                                <div class="font-medium">Team</div>
+                                <div class="text-xs text-gray-500 mt-0.5">User and team management</div>
+                            </div>
+                        </button>
+                        <button class="w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 group">
+                            <i data-lucide="briefcase" class="w-5 h-5 text-gray-400 group-hover:text-gray-600 mr-3"></i>
+                            <div class="text-left">
+                                <div class="font-medium">Workspace</div>
+                                <div class="text-xs text-gray-500 mt-0.5">Workspace configuration</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col">
+            <!-- Header Bar -->
+            <div class="flex items-center justify-between py-4 px-6 bg-white border-b border-gray-200">
+                <div class="flex items-center">
+                    <div class="bg-gray-200 rounded-full px-3 py-1 flex items-center space-x-2">
+                        <i data-lucide="clock" class="w-4 h-4 text-gray-600"></i>
+                        <span class="text-sm font-medium text-gray-700 font-mono">00:25:15</span>
+                        <span class="text-sm text-gray-600">•</span>
+                        <span class="text-sm text-gray-700">3 pending prompts</span>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <button class="inline-flex items-center space-x-2 px-3 py-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-md">
+                        <i data-lucide="help-circle" class="w-4 h-4"></i>
+                        <span>Help</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="flex items-center space-x-4 py-4 px-6 bg-white border-b border-gray-200">
+                <button class="inline-flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    <i data-lucide="car" class="w-4 h-4 text-gray-500"></i>
+                    <span>Tesla</span>
+                    <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
+                </button>
+                <button class="inline-flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    <i data-lucide="calendar" class="w-4 h-4 text-gray-500"></i>
+                    <span>Last 7 days</span>
+                    <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
+                </button>
+                <button class="inline-flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    <i data-lucide="tag" class="w-4 h-4 text-gray-500"></i>
+                    <span>All Tags</span>
+                    <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
+                </button>
+                <button class="inline-flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    <i data-lucide="cpu" class="w-4 h-4 text-gray-500"></i>
+                    <span>All Models</span>
+                    <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
+                </button>
+            </div>
+
+            <!-- Main Dashboard Content -->
+            <div class="flex-1 p-6">
+                <div class="max-w-6xl mx-auto">
+                    <!-- Page Header -->
+                    <div class="mb-8">
+                        <h1 class="text-3xl font-bold text-gray-900">Good morning! ☕</h1>
+                        <p class="text-lg text-gray-600 mt-2">Here's your brand's strategic priorities for today</p>
+                    </div>
+
+                    <!-- Quick Stats Row -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                        <div class="bg-white rounded-lg p-4 border border-gray-200">
+                            <div class="text-sm text-gray-500 font-medium">Active Prompts</div>
+                            <div class="text-2xl font-bold text-gray-900">247</div>
+                            <div class="text-xs text-green-600">+12 this week</div>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 border border-gray-200">
+                            <div class="text-sm text-gray-500 font-medium">Top 3 Rankings</div>
+                            <div class="text-2xl font-bold text-gray-900">34</div>
+                            <div class="text-xs text-green-600">+5 this week</div>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 border border-gray-200">
+                            <div class="text-sm text-gray-500 font-medium">Content Gaps</div>
+                            <div class="text-2xl font-bold text-gray-900">8</div>
+                            <div class="text-xs text-blue-600">High opportunity</div>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 border border-gray-200">
+                            <div class="text-sm text-gray-500 font-medium">Avg. Rank</div>
+                            <div class="text-2xl font-bold text-gray-900">4.2</div>
+                            <div class="text-xs text-yellow-600">Needs improvement</div>
+                        </div>
+                    </div>
+
+                    <!-- Brand Visibility Score KPI -->
+                    <div class="mb-8">
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+                            <div class="flex items-center justify-between mb-6">
+                                <div>
+                                    <h2 class="text-lg font-semibold text-gray-900 mb-1">Brand Visibility Score</h2>
+                                    <p class="text-sm text-gray-600">Your overall AI search presence</p>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <i data-lucide="calendar" class="w-4 h-4 text-gray-400"></i>
+                                    <select class="text-sm border border-gray-300 rounded-md px-3 py-1">
+                                        <option>Last 7 days</option>
+                                        <option>Last 30 days</option>
+                                        <option>Last 90 days</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                <!-- Score Display -->
+                                <div class="flex items-center space-x-6">
+                                    <div>
+                                        <div class="text-5xl font-bold text-gray-900 mb-2">
+                                            78<span class="text-2xl text-gray-500 font-normal">/100</span>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <i data-lucide="trending-up" class="w-4 h-4 text-green-600"></i>
+                                            <span class="text-sm font-medium text-green-600">+1 from yesterday</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Trend Chart Placeholder -->
+                                <div class="h-32 bg-gray-50 rounded-lg flex items-center justify-center">
+                                    <canvas id="trendChart" width="300" height="120"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Hub with Tabs -->
+                    <div class="mb-8">
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <h2 class="text-2xl font-bold text-gray-900">Your Action Hub</h2>
+                                <p class="text-gray-600 mt-1">Strategic content opportunities to dominate AI search</p>
+                            </div>
+                            <div class="text-sm text-gray-500">Updated 5 minutes ago</div>
+                        </div>
+
+                        <!-- Tab Navigation -->
+                        <div class="border-b border-gray-200 mb-8">
+                            <nav class="-mb-px flex space-x-8">
+                                <button class="tab-btn flex items-center space-x-2 py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium text-sm transition-colors" data-tab="optimize">
+                                    <i data-lucide="target" class="w-5 h-5"></i>
+                                    <span>Optimize</span>
+                                    <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold rounded-full bg-gray-100 text-gray-800">0</span>
+                                </button>
+                                <button class="tab-btn flex items-center space-x-2 py-4 px-1 border-b-2 border-blue-500 text-blue-600 font-medium text-sm transition-colors active" data-tab="create">
+                                    <i data-lucide="plus" class="w-5 h-5"></i>
+                                    <span>Create</span>
+                                    <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold rounded-full bg-blue-100 text-blue-800">4</span>
+                                </button>
+                                <button class="tab-btn flex items-center space-x-2 py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium text-sm transition-colors" data-tab="wins">
+                                    <i data-lucide="trophy" class="w-5 h-5"></i>
+                                    <span>Wins & Insights</span>
+                                    <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold rounded-full bg-gray-100 text-gray-800">0</span>
+                                </button>
+                            </nav>
+                        </div>
+
+                        <!-- Tab Content -->
+                        <div class="min-h-[400px]">
+                            <!-- Optimize Tab -->
+                            <div id="optimize-tab" class="tab-content">
+                                <div class="text-center py-12">
+                                    <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                                        <i data-lucide="target" class="w-10 h-10 text-gray-400"></i>
+                                    </div>
+                                    <h3 class="text-xl font-semibold text-gray-900 mb-4">Ready to Optimize Your Content</h3>
+                                    <p class="text-gray-600 mb-8 max-w-md mx-auto leading-relaxed">
+                                        Once your content is live and we detect it in AI answers, your optimization tasks will appear here. 
+                                        Let's get your first piece created!
+                                    </p>
+                                    <button class="inline-flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors" onclick="switchTab('create')">
+                                        <i data-lucide="plus" class="w-5 h-5"></i>
+                                        <span>Go to Create Hub</span>
+                                        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Create Tab -->
+                            <div id="create-tab" class="tab-content active">
+                                <div>
+                                    <div class="mb-6">
+                                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Content Opportunities</h3>
+                                        <p class="text-gray-600">High-priority content gaps identified during your onboarding analysis</p>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                        <!-- Content Gap Card 1 -->
+                                        <div class="p-6 rounded-lg border-2 border-blue-200 bg-blue-50 hover:shadow-lg transition-all duration-200 relative overflow-hidden">
+                                            <div class="absolute top-0 right-0 w-32 h-32 opacity-5">
+                                                <i data-lucide="plus" class="w-full h-full"></i>
+                                            </div>
+
+                                            <div class="flex items-start justify-between mb-4 relative z-10">
+                                                <div class="flex items-center space-x-3">
+                                                    <div class="p-2 rounded-lg bg-white shadow-sm">
+                                                        <i data-lucide="plus" class="w-5 h-5 text-blue-600"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="text-sm font-medium text-gray-600">Content Gap</div>
+                                                        <div class="text-xs px-2 py-1 rounded-full font-medium bg-blue-100 text-blue-800">High Priority</div>
+                                                    </div>
+                                                </div>
+                                                <div class="text-right">
+                                                    <div class="text-xs text-gray-500">Authority</div>
+                                                    <div class="flex items-center space-x-1">
+                                                        <i data-lucide="target" class="w-4 h-4 text-blue-600"></i>
+                                                        <span class="text-sm font-bold text-blue-600">Builder</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-4">
+                                                <h3 class="text-lg font-semibold text-gray-900 mb-2">Content Gap: "how to finance an electric vehicle"</h3>
+                                                <p class="text-sm text-gray-700 leading-relaxed">This is a high-priority prompt to establish your authority in EV financing.</p>
+                                            </div>
+
+                                            <div class="grid grid-cols-2 gap-4 mb-4">
+                                                <div class="bg-white rounded-lg p-3 shadow-sm">
+                                                    <div class="text-xs text-gray-500 font-medium">Monthly Volume</div>
+                                                    <div class="text-lg font-bold text-gray-900">8,900</div>
+                                                </div>
+                                                <div class="bg-white rounded-lg p-3 shadow-sm">
+                                                    <div class="text-xs text-gray-500 font-medium">Competitors</div>
+                                                    <div class="text-lg font-bold text-gray-900">3</div>
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-4 p-3 bg-white rounded-lg border border-blue-200">
+                                                <div class="flex items-start space-x-2">
+                                                    <i data-lucide="trending-up" class="w-4 h-4 text-blue-600 mt-0.5"></i>
+                                                    <div>
+                                                        <div class="text-xs font-medium text-blue-700 uppercase tracking-wide">Opportunity</div>
+                                                        <p class="text-sm text-blue-800 font-medium">Low competition, high search intent</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <button class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-all duration-200 flex items-center justify-center space-x-2 group shadow-sm">
+                                                <i data-lucide="plus" class="w-4 h-4"></i>
+                                                <span>Generate Content Brief</span>
+                                                <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200"></i>
+                                            </button>
+                                        </div>
+
+                                        <!-- Content Gap Card 2 -->
+                                        <div class="p-6 rounded-lg border-2 border-blue-200 bg-blue-50 hover:shadow-lg transition-all duration-200 relative overflow-hidden">
+                                            <div class="absolute top-0 right-0 w-32 h-32 opacity-5">
+                                                <i data-lucide="plus" class="w-full h-full"></i>
+                                            </div>
+
+                                            <div class="flex items-start justify-between mb-4 relative z-10">
+                                                <div class="flex items-center space-x-3">
+                                                    <div class="p-2 rounded-lg bg-white shadow-sm">
+                                                        <i data-lucide="plus" class="w-5 h-5 text-blue-600"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="text-sm font-medium text-gray-600">Content Gap</div>
+                                                        <div class="text-xs px-2 py-1 rounded-full font-medium bg-blue-100 text-blue-800">High Priority</div>
+                                                    </div>
+                                                </div>
+                                                <div class="text-right">
+                                                    <div class="text-xs text-gray-500">Authority</div>
+                                                    <div class="flex items-center space-x-1">
+                                                        <i data-lucide="target" class="w-4 h-4 text-blue-600"></i>
+                                                        <span class="text-sm font-bold text-blue-600">Builder</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-4">
+                                                <h3 class="text-lg font-semibold text-gray-900 mb-2">Content Gap: "electric vehicle tax incentives 2024"</h3>
+                                                <p class="text-sm text-gray-700 leading-relaxed">High-value content opportunity around new tax incentive regulations.</p>
+                                            </div>
+
+                                            <div class="grid grid-cols-2 gap-4 mb-4">
+                                                <div class="bg-white rounded-lg p-3 shadow-sm">
+                                                    <div class="text-xs text-gray-500 font-medium">Monthly Volume</div>
+                                                    <div class="text-lg font-bold text-gray-900">12,400</div>
+                                                </div>
+                                                <div class="bg-white rounded-lg p-3 shadow-sm">
+                                                    <div class="text-xs text-gray-500 font-medium">Competitors</div>
+                                                    <div class="text-lg font-bold text-gray-900">2</div>
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-4 p-3 bg-white rounded-lg border border-blue-200">
+                                                <div class="flex items-start space-x-2">
+                                                    <i data-lucide="trending-up" class="w-4 h-4 text-blue-600 mt-0.5"></i>
+                                                    <div>
+                                                        <div class="text-xs font-medium text-blue-700 uppercase tracking-wide">Opportunity</div>
+                                                        <p class="text-sm text-blue-800 font-medium">Trending topic with government policy changes</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <button class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-all duration-200 flex items-center justify-center space-x-2 group shadow-sm">
+                                                <i data-lucide="plus" class="w-4 h-4"></i>
+                                                <span>Generate Content Brief</span>
+                                                <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Wins Tab -->
+                            <div id="wins-tab" class="tab-content">
+                                <div class="text-center py-12">
+                                    <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                                        <i data-lucide="trophy" class="w-10 h-10 text-gray-400"></i>
+                                    </div>
+                                    <h3 class="text-xl font-semibold text-gray-900 mb-4">Your Wins Are Coming!</h3>
+                                    <p class="text-gray-600 mb-8 max-w-md mx-auto leading-relaxed">
+                                        As you capture top ranks and earn citations, your wins and performance reports will show up here. 
+                                        Stay focused!
+                                    </p>
+                                    <div class="flex items-center justify-center space-x-2 text-sm text-gray-500">
+                                        <i data-lucide="sparkles" class="w-4 h-4"></i>
+                                        <span>First win unlocks detailed analytics</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Create trend chart
+        const ctx = document.getElementById('trendChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'],
+                datasets: [{
+                    data: [72, 74, 71, 76, 75, 77, 78],
+                    borderColor: '#3B82F6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#3B82F6',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: { display: false },
+                    y: { 
+                        display: false,
+                        min: 65,
+                        max: 85
+                    }
+                },
+                elements: {
+                    point: {
+                        hoverRadius: 6
+                    }
+                }
+            }
+        });
+
+        // Tab functionality
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active state from all tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.classList.remove('border-blue-500', 'text-blue-600');
+                btn.classList.add('border-transparent', 'text-gray-500');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // Set active state on selected tab button
+            const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
+            activeBtn.classList.add('active', 'border-blue-500', 'text-blue-600');
+            activeBtn.classList.remove('border-transparent', 'text-gray-500');
+        }
+
+        // Add click handlers to tab buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tabName = btn.getAttribute('data-tab');
+                switchTab(tabName);
+            });
+        });
+    </script>
+</body>
+</html>

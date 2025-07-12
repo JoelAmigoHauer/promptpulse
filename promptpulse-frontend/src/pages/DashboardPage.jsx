@@ -1,116 +1,190 @@
-import React, { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import React, { useState } from 'react';
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer } from 'recharts';
+import { TrendingUp, Calendar } from 'lucide-react';
+import Sidebar from '../components/Sidebar';
+import HeaderBar from '../components/HeaderBar';
+import Filters from '../components/Filters';
+import ActionHub from '../components/ActionHub';
+import { RankingChallengeButton, MentionChallengeButton } from '../components/ChallengeCompetitorButton';
 
-function DashboardPage({ onLogout }) {
-  const [stats, setStats] = useState({
-    totalMentions: 379,
-    sentiment: { positive: 65, neutral: 25, negative: 10 },
-    brands: 3,
-    credits: 245
-  })
+const DashboardPage = ({ onLogout }) => {
+  const [selectedTimeframe, setSelectedTimeframe] = useState('7d');
+
+  const handleChallenge = (challengeData) => {
+    console.log('Challenge created:', challengeData);
+    // In production, this would trigger the content creation workflow
+  };
+
+  // Mock data for Brand Visibility Score trend
+  const visibilityTrendData = [
+    { day: 'Day 1', score: 72 },
+    { day: 'Day 2', score: 74 },
+    { day: 'Day 3', score: 71 },
+    { day: 'Day 4', score: 76 },
+    { day: 'Day 5', score: 75 },
+    { day: 'Day 6', score: 77 },
+    { day: 'Day 7', score: 78 },
+  ];
+
+
+  const currentScore = visibilityTrendData[visibilityTrendData.length - 1]?.score || 78;
+  const previousScore = visibilityTrendData[visibilityTrendData.length - 2]?.score || 77;
+  const scoreChange = currentScore - previousScore;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-gray-900">PromptPulse</h1>
-              <div className="ml-10 flex space-x-8">
-                <Link to="/dashboard" className="text-purple-600 border-b-2 border-purple-600 py-2">
-                  Dashboard
-                </Link>
-                <Link to="/brands" className="text-gray-500 hover:text-gray-700 py-2">
-                  Brands
-                </Link>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar */}
+      <Sidebar />
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        {/* Header Bar */}
+        <HeaderBar />
+
+        {/* Filters */}
+        <Filters />
+
+        {/* Main Dashboard Content */}
+        <div className="flex-1 p-6">
+          <div className="max-w-6xl mx-auto">
+            {/* Page Header */}
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-gray-900">Good morning! ☕</h1>
+              <p className="text-lg text-gray-600 mt-2">
+                Here's your brand's strategic priorities for today
+              </p>
+            </div>
+
+            {/* Quick Stats Row */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+              <div className="bg-white rounded-lg p-4 border border-gray-200">
+                <div className="text-sm text-gray-500 font-medium">Active Prompts</div>
+                <div className="text-2xl font-bold text-gray-900">247</div>
+                <div className="text-xs text-green-600">+12 this week</div>
               </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-500">Credits: {stats.credits}/1000</span>
-              <button 
-                onClick={onLogout}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Dashboard Overview</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-sm font-medium text-gray-500">Total Mentions</h3>
-              <p className="text-3xl font-bold text-gray-900">{stats.totalMentions}</p>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-sm font-medium text-gray-500">Positive Sentiment</h3>
-              <p className="text-3xl font-bold text-green-600">{stats.sentiment.positive}%</p>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-sm font-medium text-gray-500">Active Brands</h3>
-              <p className="text-3xl font-bold text-gray-900">{stats.brands}</p>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-sm font-medium text-gray-500">Credits Used</h3>
-              <p className="text-3xl font-bold text-purple-600">{stats.credits}</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Mentions</h3>
-              <div className="space-y-4">
-                <div className="border-l-4 border-green-400 pl-4">
-                  <p className="text-sm text-gray-600">ChatGPT mentioned TechCorp positively</p>
-                  <p className="text-xs text-gray-400">2 hours ago</p>
-                </div>
-                <div className="border-l-4 border-yellow-400 pl-4">
-                  <p className="text-sm text-gray-600">Claude discussed EcoGreen neutrally</p>
-                  <p className="text-xs text-gray-400">4 hours ago</p>
-                </div>
-                <div className="border-l-4 border-green-400 pl-4">
-                  <p className="text-sm text-gray-600">Gemini recommended FinanceFirst</p>
-                  <p className="text-xs text-gray-400">6 hours ago</p>
-                </div>
+              <div className="bg-white rounded-lg p-4 border border-gray-200">
+                <div className="text-sm text-gray-500 font-medium">Top 3 Rankings</div>
+                <div className="text-2xl font-bold text-gray-900">34</div>
+                <div className="text-xs text-green-600">+5 this week</div>
+              </div>
+              <div className="bg-white rounded-lg p-4 border border-gray-200">
+                <div className="text-sm text-gray-500 font-medium">Content Gaps</div>
+                <div className="text-2xl font-bold text-gray-900">8</div>
+                <div className="text-xs text-blue-600">High opportunity</div>
+              </div>
+              <div className="bg-white rounded-lg p-4 border border-gray-200">
+                <div className="text-sm text-gray-500 font-medium">Avg. Rank</div>
+                <div className="text-2xl font-bold text-gray-900">4.2</div>
+                <div className="text-xs text-yellow-600">Needs improvement</div>
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Sentiment Distribution</h3>
-              <div className="space-y-3">
-                <div className="flex items-center">
-                  <span className="w-20 text-sm text-gray-600">Positive</span>
-                  <div className="flex-1 bg-gray-200 rounded-full h-2 ml-3">
-                    <div className="bg-green-500 h-2 rounded-full" style={{width: `${stats.sentiment.positive}%`}}></div>
+            {/* Recent Competitor Activity */}
+            <div className="mb-8">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Competitor Activity</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-1">
+                        <span className="font-medium text-gray-900">Ford</span>
+                        <span className="text-sm text-gray-500">captured #2 ranking</span>
+                      </div>
+                      <p className="text-sm text-gray-600">"electric vehicle charging network"</p>
+                    </div>
+                    <RankingChallengeButton
+                      competitor="Ford"
+                      prompt="electric vehicle charging network"
+                      ranking={2}
+                      onChallenge={handleChallenge}
+                    />
                   </div>
-                  <span className="ml-3 text-sm text-gray-600">{stats.sentiment.positive}%</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="w-20 text-sm text-gray-600">Neutral</span>
-                  <div className="flex-1 bg-gray-200 rounded-full h-2 ml-3">
-                    <div className="bg-yellow-500 h-2 rounded-full" style={{width: `${stats.sentiment.neutral}%`}}></div>
+                  
+                  <div className="flex items-center justify-between p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-1">
+                        <span className="font-medium text-gray-900">Rivian</span>
+                        <span className="text-sm text-gray-500">mentioned 15 times today</span>
+                      </div>
+                      <p className="text-sm text-gray-600">"EV truck comparison"</p>
+                    </div>
+                    <MentionChallengeButton
+                      competitor="Rivian"
+                      prompt="EV truck comparison"
+                      onChallenge={handleChallenge}
+                    />
                   </div>
-                  <span className="ml-3 text-sm text-gray-600">{stats.sentiment.neutral}%</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="w-20 text-sm text-gray-600">Negative</span>
-                  <div className="flex-1 bg-gray-200 rounded-full h-2 ml-3">
-                    <div className="bg-red-500 h-2 rounded-full" style={{width: `${stats.sentiment.negative}%`}}></div>
-                  </div>
-                  <span className="ml-3 text-sm text-gray-600">{stats.sentiment.negative}%</span>
                 </div>
               </div>
             </div>
+
+            {/* Brand Visibility Score KPI */}
+            <div className="mb-8">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-1">Brand Visibility Score</h2>
+                    <p className="text-sm text-gray-600">Your overall AI search presence</p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Calendar className="w-4 h-4 text-gray-400" />
+                    <select
+                      value={selectedTimeframe}
+                      onChange={(e) => setSelectedTimeframe(e.target.value)}
+                      className="text-sm border border-gray-300 rounded-md px-3 py-1"
+                    >
+                      <option value="7d">Last 7 days</option>
+                      <option value="30d">Last 30 days</option>
+                      <option value="90d">Last 90 days</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {/* Score Display */}
+                  <div className="flex items-center space-x-6">
+                    <div>
+                      <div className="text-5xl font-bold text-gray-900 mb-2">
+                        {currentScore}
+                        <span className="text-2xl text-gray-500 font-normal">/100</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <TrendingUp className={`w-4 h-4 ${scoreChange >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+                        <span className={`text-sm font-medium ${scoreChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {scoreChange >= 0 ? '+' : ''}{scoreChange} from yesterday
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Trend Chart */}
+                  <div className="h-32">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={visibilityTrendData}>
+                        <XAxis dataKey="day" hide />
+                        <YAxis hide domain={['dataMin - 5', 'dataMax + 5']} />
+                        <Line
+                          type="monotone"
+                          dataKey="score"
+                          stroke="#3B82F6"
+                          strokeWidth={3}
+                          dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
+                          activeDot={{ r: 6, stroke: '#3B82F6', strokeWidth: 2 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Hub */}
+            <ActionHub />
           </div>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default DashboardPage
+export default DashboardPage;

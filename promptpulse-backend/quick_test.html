@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PromptPulse Brand Search Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .container { background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        input, button { padding: 10px; margin: 5px; border: 1px solid #ddd; border-radius: 4px; }
+        button { background: #007bff; color: white; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .results { margin-top: 20px; }
+        .mention { background: white; padding: 15px; margin: 10px 0; border-radius: 4px; border-left: 4px solid #007bff; }
+        .loading { color: #666; }
+        .error { color: #d32f2f; }
+        .success { color: #2e7d32; }
+    </style>
+</head>
+<body>
+    <h1>🔍 PromptPulse Brand Search Test</h1>
+    <p>Testing OpenRouter integration with your backend API</p>
+    
+    <div class="container">
+        <h2>Brand Search</h2>
+        <input type="text" id="brandInput" placeholder="Enter brand name (e.g., Tesla, Apple, Google)" value="Tesla">
+        <button onclick="searchBrand()">Search Brand</button>
+        <div id="status"></div>
+    </div>
+
+    <div id="results" class="results"></div>
+
+    <script>
+        async function searchBrand() {
+            const brandName = document.getElementById('brandInput').value.trim();
+            const statusDiv = document.getElementById('status');
+            const resultsDiv = document.getElementById('results');
+            
+            if (!brandName) {
+                statusDiv.innerHTML = '<span class="error">Please enter a brand name</span>';
+                return;
+            }
+
+            // Clear previous results
+            resultsDiv.innerHTML = '';
+            statusDiv.innerHTML = '<span class="loading">🔍 Searching with OpenRouter (GPT-4, Claude, Gemini)...</span>';
+
+            try {
+                const response = await fetch('http://localhost:8000/api/brands/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        brand_name: brandName,
+                        keywords: [brandName],
+                        save_to_db: false
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                // Debug: Log the data to console
+                console.log('API Response:', data);
+                console.log('Mentions:', data.mentions);
+                console.log('Providers found:', data.mentions.map(m => m.provider));
+                
+                statusDiv.innerHTML = '<span class="success">✅ Search completed successfully!</span>';
+                
+                // Display results
+                resultsDiv.innerHTML = `
+                    <div class="container">
+                        <h3>Results for "${data.brand_name}"</h3>
+                        <p><strong>Total Mentions:</strong> ${data.total_mentions}</p>
+                        <p><strong>Visibility Score:</strong> ${data.visibility_score.toFixed(2)}</p>
+                        <p><strong>Sentiment:</strong> 
+                            Positive: ${data.sentiment_distribution.positive || 0}, 
+                            Neutral: ${data.sentiment_distribution.neutral || 0}, 
+                            Negative: ${data.sentiment_distribution.negative || 0}
+                        </p>
+                        <p><strong>AI Providers:</strong> 
+                            ${[...new Set(data.mentions.map(m => m.provider.toUpperCase()))].join(', ')}
+                        </p>
+                        
+                        <h4>Sample Mentions (Mixed from all AI providers):</h4>
+                        ${(() => {
+                            // Get a mix of providers
+                            const openaiMentions = data.mentions.filter(m => m.provider === 'openai').slice(0, 2);
+                            const anthropicMentions = data.mentions.filter(m => m.provider === 'anthropic').slice(0, 2);
+                            const googleMentions = data.mentions.filter(m => m.provider === 'google').slice(0, 2);
+                            const mixedMentions = [...openaiMentions, ...anthropicMentions, ...googleMentions];
+                            return mixedMentions.map(mention => `
+                            <div class="mention">
+                                <strong>${mention.provider.toUpperCase()}</strong> 
+                                <span style="color: ${mention.sentiment_label === 'positive' ? 'green' : mention.sentiment_label === 'negative' ? 'red' : 'orange'}">
+                                    (${mention.sentiment_label})
+                                </span>
+                                <p>${mention.content.substring(0, 300)}${mention.content.length > 300 ? '...' : ''}</p>
+                                ${mention.keywords_found.length > 0 ? `<small>Keywords: ${mention.keywords_found.join(', ')}</small>` : ''}
+                            </div>
+                        `).join('');
+                        })()}
+                    </div>
+                `;
+                
+            } catch (error) {
+                statusDiv.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+                console.error('Search error:', error);
+            }
+        }
+
+        // Test API connection on page load
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch('http://localhost:8000/health');
+                if (response.ok) {
+                    document.getElementById('status').innerHTML = '<span class="success">✅ Backend API is running</span>';
+                } else {
+                    document.getElementById('status').innerHTML = '<span class="error">❌ Backend API not responding</span>';
+                }
+            } catch (error) {
+                document.getElementById('status').innerHTML = '<span class="error">❌ Cannot connect to backend API</span>';
+            }
+        });
+    </script>
+</body>
+</html>

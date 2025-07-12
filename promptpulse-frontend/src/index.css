@@ -1,3 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Reset and base styles */
 * {
   margin: 0;
   padding: 0;
@@ -7,129 +12,19 @@
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   line-height: 1.6;
+  color: #1f2937;
+  background-color: #f9fafb;
 }
 
-/* Gradient backgrounds */
-.gradient-bg, .bg-gradient-to-br {
+/* Custom gradient backgrounds */
+.gradient-bg {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-/* Layout utilities */
-.min-h-screen { min-height: 100vh; }
-.flex { display: flex; }
-.items-center { align-items: center; }
-.justify-between { justify-content: space-between; }
-.justify-center { justify-content: center; }
-.text-center { text-align: center; }
-.space-x-4 > * + * { margin-left: 1rem; }
-.space-y-6 > * + * { margin-top: 1.5rem; }
-.grid { display: grid; }
-.grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
-.gap-6 { gap: 1.5rem; }
-.gap-8 { gap: 2rem; }
-
-/* Container */
-.container { max-width: 1200px; margin: 0 auto; }
-.max-w-md { max-width: 28rem; }
-.max-w-2xl { max-width: 42rem; }
-.max-w-7xl { max-width: 80rem; }
-.mx-auto { margin-left: auto; margin-right: auto; }
-
-/* Padding and margins */
-.p-4 { padding: 1rem; }
-.p-6 { padding: 1.5rem; }
-.p-8 { padding: 2rem; }
-.px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
-.px-4 { padding-left: 1rem; padding-right: 1rem; }
-.px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
-.px-8 { padding-left: 2rem; padding-right: 2rem; }
-.py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
-.py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
-.py-6 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
-.py-20 { padding-top: 5rem; padding-bottom: 5rem; }
-.mb-2 { margin-bottom: 0.5rem; }
-.mb-4 { margin-bottom: 1rem; }
-.mb-6 { margin-bottom: 1.5rem; }
-.mb-8 { margin-bottom: 2rem; }
-.mt-2 { margin-top: 0.5rem; }
-.mt-6 { margin-top: 1.5rem; }
-.ml-10 { margin-left: 2.5rem; }
-
-/* Typography */
-.text-xl { font-size: 1.25rem; }
-.text-2xl { font-size: 1.5rem; }
-.text-3xl { font-size: 1.875rem; }
-.text-4xl { font-size: 2.25rem; }
-.text-5xl { font-size: 3rem; }
-.text-lg { font-size: 1.125rem; }
-.text-sm { font-size: 0.875rem; }
-.text-xs { font-size: 0.75rem; }
-.font-bold { font-weight: 700; }
-.font-semibold { font-weight: 600; }
-.font-medium { font-weight: 500; }
-
-/* Colors */
-.text-white { color: white; }
-.text-gray-600 { color: #6b7280; }
-.text-gray-700 { color: #374151; }
-.text-gray-800 { color: #1f2937; }
-.text-gray-900 { color: #111827; }
-.text-gray-500 { color: #9ca3af; }
-.text-purple-600 { color: #9333ea; }
-.text-green-600 { color: #16a34a; }
-.text-yellow-600 { color: #ca8a04; }
-.text-red-600 { color: #dc2626; }
-
-/* Backgrounds */
-.bg-white { background-color: white; }
-.bg-gray-50 { background-color: #f9fafb; }
-.bg-gray-100 { background-color: #f3f4f6; }
-.bg-gray-200 { background-color: #e5e7eb; }
-.bg-purple-600 { background-color: #9333ea; }
-.bg-purple-700 { background-color: #7c3aed; }
-.bg-green-500 { background-color: #22c55e; }
-.bg-yellow-500 { background-color: #eab308; }
-.bg-red-500 { background-color: #ef4444; }
-
-/* Borders */
-.border { border-width: 1px; }
-.border-2 { border-width: 2px; }
-.border-gray-300 { border-color: #d1d5db; }
-.border-white { border-color: white; }
-.border-purple-600 { border-color: #9333ea; }
-.border-b { border-bottom-width: 1px; }
-.border-b-2 { border-bottom-width: 2px; }
-.border-l-4 { border-left-width: 4px; }
-.border-green-400 { border-color: #4ade80; }
-.border-yellow-400 { border-color: #facc15; }
-.rounded { border-radius: 0.25rem; }
-.rounded-lg { border-radius: 0.5rem; }
-.rounded-full { border-radius: 9999px; }
-
-/* Buttons and inputs */
-.w-full { width: 100%; }
-.w-20 { width: 5rem; }
-.h-2 { height: 0.5rem; }
-.h-16 { height: 4rem; }
-.flex-1 { flex: 1 1 0%; }
-
-/* Shadows */
-.shadow { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); }
-.shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
-.shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
-
-/* Interactive states */
-.hover\:bg-gray-100:hover { background-color: #f3f4f6; }
-.hover\:bg-gray-200:hover { background-color: #e5e7eb; }
-.hover\:bg-purple-700:hover { background-color: #7c3aed; }
-.hover\:text-gray-700:hover { color: #374151; }
-.hover\:text-purple-600:hover { color: #9333ea; }
-.hover\:underline:hover { text-decoration: underline; }
-
-/* Focus states */
-.focus\:outline-none:focus { outline: none; }
-.focus\:ring-2:focus { box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.5); }
-.focus\:ring-purple-500:focus { box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.5); }
+/* Ensure proper responsive behavior */
+.min-h-screen {
+  min-height: 100vh;
+}
 
 /* Form elements */
 input, button, select, textarea {
@@ -138,41 +33,26 @@ input, button, select, textarea {
   line-height: inherit;
 }
 
-input[type="email"], input[type="password"] {
-  appearance: none;
-  background-color: white;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  font-size: 1rem;
-  line-height: 1.5;
-  width: 100%;
-}
-
-input[type="email"]:focus, input[type="password"]:focus {
-  outline: none;
-  border-color: #9333ea;
-  box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.2);
-}
-
+/* Button hover effects */
 button {
-  cursor: pointer;
-  border: none;
-  border-radius: 0.5rem;
-  padding: 0.5rem 1rem;
-  font-weight: 600;
-  text-align: center;
-  transition: all 0.2s;
+  transition: all 0.2s ease-in-out;
 }
 
-/* Responsive */
+/* Responsive grid adjustments */
 @media (min-width: 768px) {
-  .md\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .md\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .md\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .md\:grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
 @media (min-width: 1024px) {
-  .lg\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .lg\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .lg\:px-8 { padding-left: 2rem; padding-right: 2rem; }
+  .lg\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .lg\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }

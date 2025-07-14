@@ -71,7 +71,7 @@ class PromptDiscoveryRequest(BaseModel):
     competitors: List[str]
 
 class PromptDiscoveryResponse(BaseModel):
-    prompts: List[str]
+    prompts: List[dict]
 
 class BrandInfoRequest(BaseModel):
     website_url: str
@@ -978,6 +978,7 @@ async def discover_prompts(request: PromptDiscoveryRequest):
     """Discover high-value prompt ideas for a brand and its competitors using OpenRouter/ChatGPT."""
     try:
         prompts = await openrouter_service.discover_prompts(request.website_url, request.competitors)
+        # Ensure the response is a list of dicts with prompt, competitors, rationale
         return PromptDiscoveryResponse(prompts=prompts)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Prompt discovery failed: {str(e)}")

@@ -92,16 +92,34 @@ const OnboardingWizard = ({ isOpen, onComplete, onSkip }) => {
     }
   }, [currentStep, formData.website, selectedCompetitorUrls]);
 
+  // Add this useEffect to sync selectedCompetitorUrls with formData.competitors when entering step 2
+  useEffect(() => {
+    if (currentStep === 2) {
+      // If formData.competitors is not empty and selectedCompetitorUrls is empty, restore from formData
+      if (formData.competitors && formData.competitors.length > 0 && selectedCompetitorUrls.length === 0) {
+        setSelectedCompetitorUrls(formData.competitors.map(c => c.url || c));
+      }
+    }
+    // If user goes back to step 1 and changes website, clear competitors
+    if (currentStep === 1) {
+      // Optionally, you could reset selectedCompetitorUrls if website changes
+      // (not implemented here to avoid data loss unless you want it)
+    }
+  }, [currentStep]);
+
   const fetchPrompts = async () => {
     setLoading(true);
     try {
       const prompts = await discoverPrompts(formData.website, selectedCompetitorUrls);
-      // Map to objects for selection UI
-      const promptObjs = prompts.map((prompt, idx) => ({
+      // Map to objects for selection UI, handling prompt objects from backend
+      const promptObjs = prompts.map((p, idx) => ({
         id: idx + 1,
-        prompt,
+        prompt: typeof p === 'string' ? p : p.prompt || '',
         priority: 'high',
-        rationale: '',
+        rationale: p.rationale || '',
+        competitors: p.competitors || [],
+        competitorCount: (p.competitors && p.competitors.length) || 0,
+        opportunity: '', // You can add logic to set this if needed
       }));
       setDiscoveredPrompts(promptObjs);
       setSelectedPrompts(promptObjs.slice(0, 5).map(p => p.id));
@@ -308,29 +326,7 @@ const OnboardingWizard = ({ isOpen, onComplete, onSkip }) => {
               </div>
             ) : (
               <>
-                {discoveredCompetitors.length > 0 && (
-                  <div className="mb-6">
-                    <h4 className="text-md font-semibold text-gray-900 mb-2">We've identified your top competitors:</h4>
-                    <div className="space-y-2">
-                      {discoveredCompetitors.map((url) => (
-                        <label key={url} className="flex items-center space-x-3 bg-gray-50 rounded-lg p-3">
-                          <input
-                            type="checkbox"
-                            checked={selectedCompetitorUrls.includes(url)}
-                            onChange={e => {
-                              if (e.target.checked) {
-                                setSelectedCompetitorUrls(prev => [...prev, url]);
-                              } else {
-                                setSelectedCompetitorUrls(prev => prev.filter(u => u !== url));
-                              }
-                            }}
-                          />
-                          <span className="font-mono text-blue-700">{url}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                {/* Removed discovered competitors checkbox list for less repetition */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Add Another Competitor URL

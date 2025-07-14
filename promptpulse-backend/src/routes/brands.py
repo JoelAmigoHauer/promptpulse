@@ -60,6 +60,27 @@ class ContentBriefResponse(BaseModel):
     sources: List[dict]
     generated_at: datetime
 
+class CompetitorDiscoveryRequest(BaseModel):
+    website_url: str
+
+class CompetitorDiscoveryResponse(BaseModel):
+    competitors: List[str]
+
+class PromptDiscoveryRequest(BaseModel):
+    website_url: str
+    competitors: List[str]
+
+class PromptDiscoveryResponse(BaseModel):
+    prompts: List[str]
+
+class BrandInfoRequest(BaseModel):
+    website_url: str
+
+class BrandInfoResponse(BaseModel):
+    name: str
+    industry: str
+    description: str
+
 @router.get("/", response_model=List[BrandResponse])
 async def get_brands(db: Session = Depends(get_db)):
     """Get all brands for the user"""
@@ -942,3 +963,36 @@ async def get_realtime_mentions(
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Real-time mentions failed: {str(e)}")
+
+@router.post("/discover-competitors", response_model=CompetitorDiscoveryResponse)
+async def discover_competitors(request: CompetitorDiscoveryRequest):
+    """Discover direct competitor URLs for a given company website using OpenRouter/ChatGPT."""
+    try:
+        competitors = await openrouter_service.discover_competitors(request.website_url)
+        return CompetitorDiscoveryResponse(competitors=competitors)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Competitor discovery failed: {str(e)}")
+
+@router.post("/discover-prompts", response_model=PromptDiscoveryResponse)
+async def discover_prompts(request: PromptDiscoveryRequest):
+    """Discover high-value prompt ideas for a brand and its competitors using OpenRouter/ChatGPT."""
+    try:
+        prompts = await openrouter_service.discover_prompts(request.website_url, request.competitors)
+        return PromptDiscoveryResponse(prompts=prompts)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Prompt discovery failed: {str(e)}")
+
+@router.post("/extract-info", response_model=BrandInfoResponse)
+async def extract_brand_info(request: BrandInfoRequest):
+    """Extract brand name, industry, and description from a website using OpenRouter/ChatGPT."""
+    try:
+        async with openrouter_service as service:
+            info = await service.extract_brand_info(request.website_url)
+        # Map AI keys to Pydantic model fields
+        return BrandInfoResponse(
+            name=info.get("name", "Unknown"),
+            industry=info.get("industry", "Unknown"),
+            description=info.get("description", "Unknown")
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Brand info extraction failed: {str(e)}")

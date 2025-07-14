@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import CelebrationAnimations from './CelebrationAnimations';
 import { useCelebration } from '../hooks/useCelebration';
+import { discoverCompetitors, discoverPrompts, extractBrandInfo } from '../services/api';
 
 const OnboardingWizard = ({ isOpen, onComplete, onSkip }) => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -34,6 +35,11 @@ const OnboardingWizard = ({ isOpen, onComplete, onSkip }) => {
   const [discoveredPrompts, setDiscoveredPrompts] = useState([]);
   const [selectedPrompts, setSelectedPrompts] = useState([]);
   const [competitorInput, setCompetitorInput] = useState('');
+  const [competitorDiscoveryLoading, setCompetitorDiscoveryLoading] = useState(false);
+  const [discoveredCompetitors, setDiscoveredCompetitors] = useState([]);
+  const [selectedCompetitorUrls, setSelectedCompetitorUrls] = useState([]);
+  // Add state for brand info loading
+  const [brandInfoLoading, setBrandInfoLoading] = useState(false);
   
   const { 
     celebration, 
@@ -81,71 +87,51 @@ const OnboardingWizard = ({ isOpen, onComplete, onSkip }) => {
   ];
 
   useEffect(() => {
-    if (currentStep === 3 && formData.brandName && formData.competitors.length > 0) {
-      discoverPrompts();
+    if (currentStep === 3 && formData.website && selectedCompetitorUrls.length > 0) {
+      fetchPrompts();
     }
-  }, [currentStep, formData.brandName, formData.competitors]);
+  }, [currentStep, formData.website, selectedCompetitorUrls]);
 
-  const discoverPrompts = async () => {
+  const fetchPrompts = async () => {
     setLoading(true);
-    
-    // Simulate AI-powered prompt discovery
-    setTimeout(() => {
-      const mockPrompts = [
-        {
-          id: 1,
-          prompt: `${formData.brandName} vs ${formData.competitors[0]?.name || 'competitors'}`,
-          opportunity: 'High-value comparison content',
-          searchVolume: 15400,
-          competitorCount: 2,
-          priority: 'high',
-          rationale: 'Direct comparison queries have high conversion potential'
-        },
-        {
-          id: 2,
-          prompt: `best ${formData.industry?.toLowerCase()} solutions`,
-          opportunity: 'Industry authority building',
-          searchVolume: 22100,
-          competitorCount: 5,
-          priority: 'high',
-          rationale: 'Establish yourself as the go-to expert in your industry'
-        },
-        {
-          id: 3,
-          prompt: `${formData.brandName} pricing`,
-          opportunity: 'Address pricing concerns proactively',
-          searchVolume: 8900,
-          competitorCount: 3,
-          priority: 'medium',
-          rationale: 'Control the pricing narrative before competitors do'
-        },
-        {
-          id: 4,
-          prompt: `${formData.industry?.toLowerCase()} trends 2024`,
-          opportunity: 'Thought leadership content',
-          searchVolume: 12300,
-          competitorCount: 4,
-          priority: 'medium',
-          rationale: 'Position as forward-thinking industry leader'
-        },
-        {
-          id: 5,
-          prompt: `how to choose ${formData.industry?.toLowerCase()} provider`,
-          opportunity: 'Educational content that drives leads',
-          searchVolume: 18700,
-          competitorCount: 6,
-          priority: 'high',
-          rationale: 'Guide prospects through decision-making process'
-        }
-      ];
-      
-      setDiscoveredPrompts(mockPrompts);
-      setSelectedPrompts(mockPrompts.filter(p => p.priority === 'high').map(p => p.id));
-      setLoading(false);
-    }, 3000);
+    try {
+      const prompts = await discoverPrompts(formData.website, selectedCompetitorUrls);
+      // Map to objects for selection UI
+      const promptObjs = prompts.map((prompt, idx) => ({
+        id: idx + 1,
+        prompt,
+        priority: 'high',
+        rationale: '',
+      }));
+      setDiscoveredPrompts(promptObjs);
+      setSelectedPrompts(promptObjs.slice(0, 5).map(p => p.id));
+    } catch (e) {
+      setDiscoveredPrompts([]);
+      setSelectedPrompts([]);
+    }
+    setLoading(false);
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    if (currentStep === 1) {
+      // Discover competitors after website is entered
+      setCompetitorDiscoveryLoading(true);
+      try {
+        const competitors = await discoverCompetitors(formData.website);
+        setDiscoveredCompetitors(competitors);
+        setSelectedCompetitorUrls(competitors);
+      } catch (e) {
+        setDiscoveredCompetitors([]);
+        setSelectedCompetitorUrls([]);
+      }
+      setCompetitorDiscoveryLoading(false);
+      setCurrentStep(currentStep + 1);
+      return;
+    }
+    if (currentStep === 2) {
+      // Save selected competitors as URLs
+      setFormData(prev => ({ ...prev, competitors: selectedCompetitorUrls.map(url => ({ url, id: url })) }));
+    }
     if (currentStep < steps.length) {
       setCurrentStep(currentStep + 1);
     } else {
@@ -160,23 +146,19 @@ const OnboardingWizard = ({ isOpen, onComplete, onSkip }) => {
   };
 
   const addCompetitor = () => {
-    if (competitorInput.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        competitors: [...prev.competitors, { 
-          name: competitorInput.trim(),
-          id: Date.now()
-        }]
-      }));
+    // Validate URL
+    try {
+      const url = new URL(competitorInput.trim());
+      if (!selectedCompetitorUrls.includes(url.href)) {
+        setSelectedCompetitorUrls(prev => [...prev, url.href]);
+      }
       setCompetitorInput('');
+    } catch {
+      // Invalid URL, ignore
     }
   };
-
-  const removeCompetitor = (id) => {
-    setFormData(prev => ({
-      ...prev,
-      competitors: prev.competitors.filter(comp => comp.id !== id)
-    }));
+  const removeCompetitor = (url) => {
+    setSelectedCompetitorUrls(prev => prev.filter(u => u !== url));
   };
 
   const togglePromptSelection = (promptId) => {
@@ -217,7 +199,7 @@ const OnboardingWizard = ({ isOpen, onComplete, onSkip }) => {
       case 1:
         return formData.brandName && formData.industry;
       case 2:
-        return formData.competitors.length > 0;
+        return selectedCompetitorUrls.length > 0;
       case 3:
         return selectedPrompts.length > 0;
       case 4:
@@ -227,11 +209,50 @@ const OnboardingWizard = ({ isOpen, onComplete, onSkip }) => {
     }
   };
 
+  // Handler for website blur or Next
+  const handleWebsiteBlur = async () => {
+    if (formData.website && !formData.brandName && !brandInfoLoading) {
+      setBrandInfoLoading(true);
+      try {
+        const info = await extractBrandInfo(formData.website);
+        setFormData(prev => ({
+          ...prev,
+          brandName: info.name || info.brand_name || '',
+          industry: info.industry || '',
+          brandDescription: info.description || ''
+        }));
+      } catch (e) {
+        // fallback: do nothing
+      }
+      setBrandInfoLoading(false);
+    }
+  };
+
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
         return (
           <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Website URL
+              </label>
+              <input
+                type="url"
+                value={formData.website}
+                onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
+                onBlur={handleWebsiteBlur}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="https://your-website.com"
+              />
+              {brandInfoLoading && (
+                <div className="text-center py-4">
+                  <Loader2 className="w-6 h-6 text-blue-600 animate-spin mx-auto" />
+                  <p className="text-sm text-gray-600 mt-2">Extracting brand info...</p>
+                </div>
+              )}
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Brand Name *
@@ -273,75 +294,93 @@ const OnboardingWizard = ({ isOpen, onComplete, onSkip }) => {
                 placeholder="What does your company do? What makes you unique?"
               />
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Website URL
-              </label>
-              <input
-                type="url"
-                value={formData.website}
-                onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="https://your-website.com"
-              />
-            </div>
           </div>
         );
 
       case 2:
         return (
           <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Add Competitors
-              </label>
-              <div className="flex space-x-2">
-                <input
-                  type="text"
-                  value={competitorInput}
-                  onChange={(e) => setCompetitorInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && addCompetitor()}
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter competitor name"
-                />
-                <button
-                  onClick={addCompetitor}
-                  className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  <Plus className="w-5 h-5" />
-                </button>
+            {competitorDiscoveryLoading ? (
+              <div className="text-center py-8">
+                <Loader2 className="w-8 h-8 text-blue-600 animate-spin mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Identifying Your Top Competitors...</h3>
+                <p className="text-gray-600">Our AI is researching direct competitors for your brand.</p>
               </div>
-            </div>
-
-            {formData.competitors.length > 0 && (
-              <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-3">Your Competitors:</h4>
-                <div className="space-y-2">
-                  {formData.competitors.map((competitor) => (
-                    <div
-                      key={competitor.id}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                    >
-                      <span className="font-medium">{competitor.name}</span>
-                      <button
-                        onClick={() => removeCompetitor(competitor.id)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
+            ) : (
+              <>
+                {discoveredCompetitors.length > 0 && (
+                  <div className="mb-6">
+                    <h4 className="text-md font-semibold text-gray-900 mb-2">We've identified your top competitors:</h4>
+                    <div className="space-y-2">
+                      {discoveredCompetitors.map((url) => (
+                        <label key={url} className="flex items-center space-x-3 bg-gray-50 rounded-lg p-3">
+                          <input
+                            type="checkbox"
+                            checked={selectedCompetitorUrls.includes(url)}
+                            onChange={e => {
+                              if (e.target.checked) {
+                                setSelectedCompetitorUrls(prev => [...prev, url]);
+                              } else {
+                                setSelectedCompetitorUrls(prev => prev.filter(u => u !== url));
+                              }
+                            }}
+                          />
+                          <span className="font-mono text-blue-700">{url}</span>
+                        </label>
+                      ))}
                     </div>
-                  ))}
+                  </div>
+                )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Add Another Competitor URL
+                  </label>
+                  <div className="flex space-x-2">
+                    <input
+                      type="url"
+                      value={competitorInput}
+                      onChange={(e) => setCompetitorInput(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && addCompetitor()}
+                      className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="https://competitor.com"
+                    />
+                    <button
+                      onClick={addCompetitor}
+                      className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      <Plus className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
-              </div>
+                {selectedCompetitorUrls.length > 0 && (
+                  <div className="mt-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">Your Selected Competitors:</h4>
+                    <div className="space-y-2">
+                      {selectedCompetitorUrls.map((url) => (
+                        <div
+                          key={url}
+                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                        >
+                          <span className="font-mono text-blue-700">{url}</span>
+                          <button
+                            onClick={() => removeCompetitor(url)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+                  <h4 className="font-medium text-blue-900 mb-2">💡 Tip</h4>
+                  <p className="text-blue-800 text-sm">
+                    Confirm or add 3-5 of your main competitors. We'll analyze their content strategies to find gaps you can exploit.
+                  </p>
+                </div>
+              </>
             )}
-
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 className="font-medium text-blue-900 mb-2">💡 Tip</h4>
-              <p className="text-blue-800 text-sm">
-                Add 3-5 of your main competitors. We'll analyze their content strategies to find gaps you can exploit.
-              </p>
-            </div>
           </div>
         );
 
@@ -393,10 +432,6 @@ const OnboardingWizard = ({ isOpen, onComplete, onSkip }) => {
                           </div>
                           <p className="text-sm text-gray-600 mb-3">{prompt.opportunity}</p>
                           <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div>
-                              <span className="text-gray-500">Search Volume:</span>
-                              <span className="font-medium ml-1">{prompt.searchVolume?.toLocaleString()}</span>
-                            </div>
                             <div>
                               <span className="text-gray-500">Competitors:</span>
                               <span className="font-medium ml-1">{prompt.competitorCount}</span>

@@ -5,7 +5,9 @@ import OptimizationInsightCard from './OptimizationInsightCard';
 import WinInsightCard from './WinInsightCard';
 import BriefGenerationModal from './BriefGenerationModal';
 
-const ActionHub = () => {
+const isDev = !process.env.NODE_ENV || process.env.NODE_ENV === 'development';
+
+const ActionHub = ({ onboardingData }) => {
   const [activeTab, setActiveTab] = useState('create');
   const [contentGaps, setContentGaps] = useState([]);
   const [optimizations, setOptimizations] = useState([]);
@@ -14,50 +16,60 @@ const ActionHub = () => {
   const [showBriefModal, setShowBriefModal] = useState(false);
   const [selectedGap, setSelectedGap] = useState(null);
 
-  // Mock data - In production, this would come from API calls
   useEffect(() => {
-    // Simulate API call for content gaps
-    const mockContentGaps = [
-      {
-        id: 1,
-        prompt: "how to finance an electric vehicle",
-        priority: "high",
-        searchVolume: 8900,
-        competitorCount: 3,
-        opportunity: "Low competition, high search intent",
-        description: "This is a high-priority prompt to establish your authority in EV financing."
-      },
-      {
-        id: 2,
-        prompt: "electric vehicle tax incentives 2024",
-        priority: "high",
-        searchVolume: 12400,
-        competitorCount: 2,
-        opportunity: "Trending topic with government policy changes",
-        description: "High-value content opportunity around new tax incentive regulations."
-      },
-      {
-        id: 3,
-        prompt: "EV charging station etiquette",
-        priority: "medium",
-        searchVolume: 5600,
-        competitorCount: 1,
-        opportunity: "Emerging topic with first-mover advantage",
-        description: "Growing concern as EV adoption increases, minimal competition."
-      },
-      {
-        id: 4,
-        prompt: "electric vehicle maintenance costs",
-        priority: "high",
-        searchVolume: 15200,
-        competitorCount: 4,
-        opportunity: "High volume with room for expert content",
-        description: "Key decision factor for EV buyers with technical depth opportunity."
-      }
-    ];
-
-    setContentGaps(mockContentGaps);
-  }, []);
+    if (onboardingData && onboardingData.selectedPrompts) {
+      // Map onboardingData.selectedPrompts to contentGaps format
+      setContentGaps(onboardingData.selectedPrompts.map((p, idx) => ({
+        id: p.id || idx + 1,
+        prompt: p.prompt,
+        priority: p.priority || 'high',
+        searchVolume: p.searchVolume || 10000,
+        competitorCount: p.competitorCount || 3,
+        opportunity: p.opportunity || '',
+        description: p.rationale || '',
+      })));
+    } else {
+      // Fallback to mock data
+      setContentGaps([
+        {
+          id: 1,
+          prompt: "how to finance an electric vehicle",
+          priority: "high",
+          searchVolume: 8900,
+          competitorCount: 3,
+          opportunity: "Low competition, high search intent",
+          description: "This is a high-priority prompt to establish your authority in EV financing."
+        },
+        {
+          id: 2,
+          prompt: "electric vehicle tax incentives 2024",
+          priority: "high",
+          searchVolume: 12400,
+          competitorCount: 2,
+          opportunity: "Trending topic with government policy changes",
+          description: "High-value content opportunity around new tax incentive regulations."
+        },
+        {
+          id: 3,
+          prompt: "EV charging station etiquette",
+          priority: "medium",
+          searchVolume: 5600,
+          competitorCount: 1,
+          opportunity: "Emerging topic with first-mover advantage",
+          description: "Growing concern as EV adoption increases, minimal competition."
+        },
+        {
+          id: 4,
+          prompt: "electric vehicle maintenance costs",
+          priority: "high",
+          searchVolume: 15200,
+          competitorCount: 4,
+          opportunity: "High volume with room for expert content",
+          description: "Key decision factor for EV buyers with technical depth opportunity."
+        }
+      ]);
+    }
+  }, [onboardingData]);
 
   const handleGenerateBrief = (gap) => {
     setSelectedGap(gap);
@@ -172,8 +184,19 @@ const ActionHub = () => {
           <h2 className="text-2xl font-bold text-gray-900">Your Action Hub</h2>
           <p className="text-gray-600 mt-1">Strategic content opportunities to dominate AI search</p>
         </div>
-        <div className="text-sm text-gray-500">
-          Updated 5 minutes ago
+        <div className="flex items-center space-x-4">
+          <div className="text-sm text-gray-500">Updated 5 minutes ago</div>
+          {isDev && (
+            <button
+              className="ml-4 px-4 py-2 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200 border border-yellow-300 text-xs font-semibold"
+              onClick={() => {
+                localStorage.removeItem('onboardingComplete');
+                window.location.reload();
+              }}
+            >
+              Try Onboarding Again
+            </button>
+          )}
         </div>
       </div>
 

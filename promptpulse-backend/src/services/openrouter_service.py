@@ -6,6 +6,8 @@ from datetime import datetime
 from typing import List, Dict, Optional, Any
 from dataclasses import dataclass
 from enum import Enum
+from ..config import settings
+from urllib.parse import urlparse
 
 class AIProvider(Enum):
     CHATGPT = "openai/gpt-4"
@@ -39,7 +41,7 @@ class OpenRouterService:
     """Service for integrating with OpenRouter API to test prompts across multiple AI providers"""
     
     def __init__(self):
-        self.api_key = os.getenv('OPENROUTER_API_KEY')
+        self.api_key = settings.openrouter_api_key
         self.base_url = "https://openrouter.ai/api/v1"
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -508,6 +510,126 @@ class OpenRouterService:
             print(f"Error grading content: {e}")
             return self._fallback_content_grade(content, prompt)
     
+    async def discover_competitors(self, website_url: str) -> List[str]:
+        """Use OpenRouter/ChatGPT to find direct competitor URLs for a given company website."""
+        prompt = f'''
+You are Rival, a focused competitor research AI that finds direct competitor URLs for any given company website.
+
+Instructions
+
+Your only task is to return a list of direct competitor website URLs
+
+Do not include detailed analysis or company information
+
+Focus on finding the most relevant direct competitors only
+
+Return only valid, active website URLs
+
+Research Steps
+
+First, understand the target company:
+Use Extract Company Insights from Website to understand their core business and industry
+
+Find competitor URLs:
+Use Google Search, Scrape and Summarise with targeted search queries:
+"companies similar to {{company_name}}"
+"alternatives to {{company_name}}"
+"{{main_product_category}} competitors"
+"best {{product_type}} companies"
+
+Validate competitors:
+Quickly check each potential competitor website to confirm they offer similar products/services
+Remove any non-competitor URLs (news sites, review sites, etc.)
+Only include direct competitors, not adjacent businesses
+
+Output Format
+
+Return a simple list of valid competitor URLs
+Each URL should be on a new line
+Include only the main domain (e.g., https://competitor.com)
+No additional commentary or analysis needed
+
+Example Input
+
+{{ "website_url": "{website_url}" }}
+
+Example Output
+https://competitor1.com
+https://competitor2.com
+https://competitor3.com
+...
+
+Final Notes
+
+Always verify URLs are valid and active
+Only include direct competitors
+Exclude marketplace sites, review sites, or news articles
+If no direct competitors found, return "No direct competitors found"
+'''
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                f"{self.base_url}/chat/completions",
+                headers=self.headers,
+                json={
+                    "model": "openai/gpt-3.5-turbo",  # or gpt-4o if available/cost-effective
+                    "messages": [
+                        {"role": "user", "content": prompt}
+                    ],
+                    "max_tokens": 512,
+                    "temperature": 0.2
+                }
+            ) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    ai_response = data['choices'][0]['message']['content']
+                    # Parse URLs from response (one per line)
+                    urls = [line.strip() for line in ai_response.splitlines() if line.strip().startswith("http")]
+                    return urls
+                else:
+                    raise Exception(f"OpenRouter API error: {response.status}")
+    
+    async def discover_prompts(self, website_url: str, competitors: List[str]) -> List[str]:
+        """Use OpenRouter/ChatGPT to find 10-15 high-value prompt ideas for a brand and its competitors."""
+        prompt = f'''
+You are a world-class AEO content strategist. Your task is to generate a list of 10-15 high-value, high-impact prompt ideas (content opportunities) for the brand at {website_url}.
+
+Instructions:
+- Focus on prompts that would help this brand win in AI search results (e.g., ChatGPT, Gemini, Claude).
+- Analyze the brand's website and its direct competitors: {', '.join(competitors)}
+- Do not include search volume or keyword difficulty—just the prompt ideas.
+- Each prompt should be a clear, user-intent-driven question or topic (e.g., "how to finance an electric vehicle").
+- Do not include any explanations, just the list of prompts, one per line.
+- Only return the prompt ideas, nothing else.
+
+Example Output:
+how to finance an electric vehicle
+electric vehicle tax incentives 2024
+EV charging station etiquette
+...
+'''
+        model = "openai/gpt-4o"  # or "openai/gpt-3.5-turbo" for lower cost
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                f"{self.base_url}/chat/completions",
+                headers=self.headers,
+                json={
+                    "model": model,
+                    "messages": [
+                        {"role": "user", "content": prompt}
+                    ],
+                    "max_tokens": 512,
+                    "temperature": 0.7
+                }
+            ) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    content = data['choices'][0]['message']['content']
+                    # Split by lines, filter empty
+                    prompts = [line.strip() for line in content.split('\n') if line.strip()]
+                    return prompts
+                else:
+                    raise Exception(f"OpenRouter API error: {response.status}")
+    
     def _parse_grade_response(self, response: str) -> Dict[str, Any]:
         """Parse non-JSON grade response into structured data"""
         
@@ -548,45 +670,108 @@ class OpenRouterService:
         
         return grade_data
     
-    def _fallback_content_grade(self, content: str, prompt: str) -> Dict[str, Any]:
-        """Fallback content grading when API fails"""
+    def _fallback_content_grade(
+        self, 
+        content: str, 
+        prompt: str
+    ) -> Dict[str, Any]:
+        """Fallback for content grading if main analysis fails"""
+        # Basic keyword matching
+        prompt_keywords = set(prompt.lower().split())
+        content_keywords = set(content.lower().split())
         
-        # Simple heuristic grading
-        word_count = len(content.split())
+        keyword_overlap = len(prompt_keywords.intersection(content_keywords))
         
-        if word_count < 100:
-            grade = 'D'
-            score = 60
-        elif word_count < 300:
-            grade = 'C'
-            score = 70
-        elif word_count < 600:
-            grade = 'B'
-            score = 80
-        else:
-            grade = 'A'
-            score = 90
+        score = min(100, int((keyword_overlap / len(prompt_keywords)) * 100)) if prompt_keywords else 0
         
         return {
-            'overall_grade': grade,
-            'numerical_score': score,
-            'authority_score': score - 5,
-            'relevance_score': score,
-            'completeness_score': score - 10,
-            'strengths': [
-                "Content addresses the topic",
-                "Appropriate length for the subject"
-            ],
-            'weaknesses': [
-                "Could benefit from more specific examples",
-                "Consider adding authoritative sources"
-            ],
-            'recommendations': [
-                "Add specific data and statistics",
-                "Include expert quotes or citations",
-                "Expand on competitive comparisons"
-            ]
+            "overall_score": score,
+            "seo_score": score,
+            "clarity_score": score,
+            "engagement_score": score,
+            "recommendations": ["Fallback analysis used. Could not perform deep AI grading."],
+            "error": "AI_GRADING_FAILED"
         }
+
+    async def extract_brand_info(self, website_url: str) -> dict:
+        """Use OpenRouter/ChatGPT to extract brand name, industry, and description from a website URL, using web search and strict dropdown matching."""
+        industry_options = [
+            "Automotive", "Technology", "Healthcare", "Finance", "Retail",
+            "Real Estate", "Education", "Manufacturing", "Energy", "Other"
+        ]
+        prompt = f'''
+You are Iris, an expert AI brand analyst. Your job is to extract structured brand information from a company's homepage URL.
+
+You MUST return a JSON object with these fields:
+- name: The brand or company name
+- industry: The industry, chosen ONLY from this list: {industry_options}
+- description: A concise summary of what the company does and what makes it unique
+
+STRICT RULES:
+- For the name, if you are unsure, use the name of the company as written in the url.
+- For the industry, you MUST select ONLY ONE value from the provided list above. If you are unsure or the industry does not fit, use "Other".
+- Do NOT invent new industry names. Do NOT use synonyms. Only use the exact spelling from the list.
+- Output ONLY the JSON object. Do NOT include any markdown, explanation, or extra text.
+- If you cannot confidently determine a field, use "Unknown" for that field (except industry, which must always be from the list).
+
+Example output:
+{{
+  "name": "Tesla",
+  "industry": "Automotive",
+  "description": "Tesla designs and manufactures electric vehicles and clean energy products."
+}}
+
+The company homepage URL is: {website_url}
+'''
+        payload = {
+            "model": "openai/gpt-4o",
+            "messages": [
+                {"role": "system", "content": "You are Iris, an expert AI brand analyst."},
+                {"role": "user", "content": prompt}
+            ],
+            "plugins": [{"id": "web"}]
+        }
+        async with self.session.post(
+            f"{self.base_url}/chat/completions",
+            headers=self.headers,
+            json=payload,
+            timeout=60
+        ) as resp:
+            if resp.status != 200:
+                text = await resp.text()
+                print(f"OpenRouter API Error: {resp.status} - {text}")
+                raise Exception(f"OpenRouter API error: {resp.status}")
+            data = await resp.json()
+            content = data["choices"][0]["message"]["content"]
+            # Try to extract JSON from the response
+            try:
+                import json as pyjson
+                start = content.find('{')
+                end = content.rfind('}') + 1
+                json_str = content[start:end]
+                info = pyjson.loads(json_str)
+                # Ensure all required fields are present
+                for key in ["name", "industry", "description"]:
+                    if key not in info:
+                        info[key] = "Unknown"
+                # After parsing info from AI:
+                if info.get("name", "").lower() == "unknown":
+                    netloc = urlparse(website_url).netloc
+                    if netloc:
+                        # Remove www. and TLD, get the main domain
+                        parts = netloc.split('.')
+                        # e.g. www.mezi.com.au → mezi, shop.mezi.com → mezi
+                        if len(parts) >= 2:
+                            name = parts[-3] if parts[-2] in ["com", "co"] and len(parts) >= 3 else parts[-2]
+                        else:
+                            name = parts[0]
+                        info["name"] = name.upper() if name else "Unknown"
+                    else:
+                        info["name"] = "Unknown"
+                return info
+            except Exception as e:
+                print(f"Failed to parse JSON from AI response: {content}")
+                return {"name": "Unknown", "industry": "Other", "description": content.strip()}
 
 # Global service instance
 openrouter_service = OpenRouterService()

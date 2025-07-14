@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from .routes import auth, brands
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 app = FastAPI(title="PromptPulse", version="1.0.0")
 

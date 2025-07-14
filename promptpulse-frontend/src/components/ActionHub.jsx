@@ -4,12 +4,10 @@ import ContentGapCard from './ContentGapCard';
 import OptimizationInsightCard from './OptimizationInsightCard';
 import WinInsightCard from './WinInsightCard';
 import BriefGenerationModal from './BriefGenerationModal';
-import Sidebar from './Sidebar';
-import HeaderBar from './HeaderBar';
 
 const isDev = !process.env.NODE_ENV || process.env.NODE_ENV === 'development';
 
-const ActionHub = ({ onboardingData, onLogout }) => {
+const ActionHub = ({ onboardingData }) => {
   const [activeTab, setActiveTab] = useState('create');
   const [contentGaps, setContentGaps] = useState([]);
   const [optimizations, setOptimizations] = useState([]);
@@ -180,85 +178,73 @@ const ActionHub = ({ onboardingData, onLogout }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <Sidebar />
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        <HeaderBar onLogout={onLogout} />
-        <div className="flex-1 p-6">
-          <div className="max-w-7xl mx-auto">
-            {/* Existing ActionHub content */}
-            <div className="mb-8">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Your Action Hub</h2>
-                  <p className="text-gray-600 mt-1">Strategic content opportunities to dominate AI search</p>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <div className="text-sm text-gray-500">Updated 5 minutes ago</div>
-                  {isDev && (
-                    <button
-                      className="ml-4 px-4 py-2 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200 border border-yellow-300 text-xs font-semibold"
-                      onClick={() => {
-                        localStorage.removeItem('onboardingComplete');
-                        window.location.reload();
-                      }}
-                    >
-                      Try Onboarding Again
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Tab Navigation */}
-              <div className="border-b border-gray-200 mb-8">
-                <nav className="-mb-px flex space-x-8">
-                  {tabs.map((tab) => {
-                    const Icon = tab.icon;
-                    const isActive = activeTab === tab.id;
-                    return (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                          isActive
-                            ? 'border-blue-500 text-blue-600'
-                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                        }`}
-                      >
-                        <Icon className="w-5 h-5" />
-                        <span>{tab.label}</span>
-                        {tab.count > 0 && (
-                          <span className={`inline-flex items-center justify-center px-2 py-1 text-xs font-bold rounded-full ${
-                            isActive 
-                              ? 'bg-blue-100 text-blue-800' 
-                              : 'bg-gray-100 text-gray-800'
-                          }`}>
-                            {tab.count}
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </nav>
-              </div>
-
-              {/* Tab Content */}
-              <div className="min-h-[400px]">
-                {renderTabContent()}
-              </div>
-
-              {/* Brief Generation Modal */}
-              <BriefGenerationModal
-                isOpen={showBriefModal}
-                onClose={handleCloseBriefModal}
-                gap={selectedGap}
-              />
-            </div>
-          </div>
+    <div className="mb-8">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Your Action Hub</h2>
+          <p className="text-gray-600 mt-1">Strategic content opportunities to dominate AI search</p>
+        </div>
+        <div className="flex items-center space-x-4">
+          <div className="text-sm text-gray-500">Updated 5 minutes ago</div>
+          {isDev && (
+            <button
+              className="ml-4 px-4 py-2 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200 border border-yellow-300 text-xs font-semibold"
+              onClick={() => {
+                localStorage.removeItem('onboardingComplete');
+                window.location.reload();
+              }}
+            >
+              Try Onboarding Again
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Tab Navigation */}
+      <div className="border-b border-gray-200 mb-8">
+        <nav className="-mb-px flex space-x-8">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  isActive
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <Icon className="w-5 h-5" />
+                <span>{tab.label}</span>
+                {tab.count > 0 && (
+                  <span className={`inline-flex items-center justify-center px-2 py-1 text-xs font-bold rounded-full ${
+                    isActive 
+                      ? 'bg-blue-100 text-blue-800' 
+                      : 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* Tab Content */}
+      <div className="min-h-[400px]">
+        {renderTabContent()}
+      </div>
+
+      {/* Brief Generation Modal */}
+      <BriefGenerationModal
+        isOpen={showBriefModal}
+        onClose={handleCloseBriefModal}
+        gap={selectedGap}
+      />
     </div>
   );
 };

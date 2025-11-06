@@ -1,4 +1,5 @@
 .PHONY: dev test api web web-build
+.PHONY: dev test api
 
 dev:
 	docker compose up -d

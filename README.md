@@ -60,4 +60,6 @@ The repository includes a `vercel.json` that:
 
 1. After deployment completes, visit the provided URL and confirm the landing page loads and displays the health status.
 2. Verify the API function directly with `curl https://<deployment-url>/api/health`.
+
+<!-- Trigger Vercel deployment -->
 3. Optionally, run `vercel dev` locally to emulate the production routing and confirm the `/health` call succeeds before promoting changes.

@@ -2,6 +2,7 @@
 from functools import lru_cache
 from typing import List
 
+from pydantic import AliasChoices, Field
 from pydantic import Field
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -21,6 +22,17 @@ class Settings(BaseSettings):
     database_url: str = Field(
         default="postgresql+asyncpg://promptpulse:promptpulse123@localhost:5432/promptpulse",
         description="SQLAlchemy-compatible database URL.",
+        validation_alias=AliasChoices(
+            "PROMPTPULSE_DATABASE_URL",
+            "DATABASE_URL",
+            "POSTGRES_PRISMA_URL",
+            "POSTGRES_URL",
+        ),
+    )
+    redis_url: str = Field(
+        default="redis://localhost:6379/0",
+        description="Redis connection URL used for caching or task coordination.",
+        validation_alias=AliasChoices("PROMPTPULSE_REDIS_URL", "REDIS_URL"),
     )
     cors_allow_origins: List[str] = Field(
         default_factory=lambda: ["http://localhost:5173"],

@@ -1,3 +1,4 @@
+.PHONY: dev test api web web-build
 .PHONY: dev test api
 
 dev:
@@ -8,3 +9,11 @@ api:
 
 test:
 	PYTHONPATH=packages/backend/src python -m unittest discover packages/backend/tests
+
+web:
+	npm install --prefix packages/frontend
+	npm run dev --prefix packages/frontend
+
+web-build:
+	npm install --prefix packages/frontend
+	npm run build --prefix packages/frontend

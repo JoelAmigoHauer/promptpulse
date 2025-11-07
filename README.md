@@ -7,6 +7,7 @@ A comprehensive production-grade technology plan, proposed repository layout, an
 
 ## Current Directories
 - `packages/backend/` – Production-aligned FastAPI service (new implementation lives here).
+- `packages/frontend/` – Minimal Vite landing page that pings the new backend health endpoint.
 - `promptpulse-backend/` – Legacy prototype backend kept for reference.
 - `promptpulse-frontend/` – React-based prototype frontend.
 - `src/services/` – Early experiments with OpenRouter integrations.

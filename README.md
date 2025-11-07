@@ -21,6 +21,8 @@ Refer to the strategy document for the long-term structure, stack decisions, and
 - `make test` runs the backend health check test suite (ensure Postgres from `make dev` is running first).
 - `make web` installs frontend dependencies and starts the Vite dev server for the new landing page.
 - `make web-build` installs dependencies and produces the static frontend build (emulates the Vercel pipeline).
+- `make legacy-api` runs the original FastAPI prototype from `promptpulse-backend/`.
+- `make legacy-web` serves the React prototype found in `promptpulse-frontend/`.
 
 Ensure Docker is installed locally before running the Make targets. To work on the backend service:
 
@@ -35,6 +37,16 @@ To work on the frontend landing page:
 2. Launch the dev server with `make web`; the page loads at `http://127.0.0.1:5173` and immediately pings `/health`.
 3. For a production-like build, run `make web-build` and serve the generated files in `packages/frontend/dist`.
 4. Copy `packages/frontend/.env.example` to `.env` in the same directory when you need to override the default API base URL.
+
+### Legacy Prototype Quickstart
+
+The historical prototypes remain available for reference and comparison while the new monorepo implementation matures:
+
+- `make legacy-api` boots the legacy FastAPI service from `promptpulse-backend/src/main.py` on port 8000. Ensure a Python virtualenv is activated and dependencies from `promptpulse-backend/requirements.txt` are installed.
+- `make legacy-web` launches the original React interface under `promptpulse-frontend/` using Vite. The demo still expects the mock API responses bundled with the legacy backend.
+- The shell helpers in `promptpulse-backend/` (for example `start_full_app.sh`) continue to work if you prefer the previous scripted workflow.
+
+Keep in mind that these prototypes do not integrate with the new Postgres/Redis stack and still rely on mocked data and in-browser auth flows.
 
 ### Vercel Deployment
 

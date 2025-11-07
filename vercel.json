@@ -29,6 +29,6 @@
       "dest": "/packages/frontend/dist/index.html"
     }
   ],
-  "installCommand": "npm install --prefix packages/frontend",
-  "buildCommand": "npm run build --prefix packages/frontend"
+  "installCommand": "pip install -r api/requirements.txt && npm install --prefix packages/frontend",
+  "buildCommand": "npm run vercel-build --prefix packages/frontend"
 }

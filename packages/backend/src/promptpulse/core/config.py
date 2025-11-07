@@ -1,6 +1,6 @@
 """Application configuration utilities."""
 from functools import lru_cache
-from typing import List
+from typing import List, Optional
 
 from pydantic import AliasChoices, Field
 from pydantic import model_validator
@@ -33,6 +33,11 @@ class Settings(BaseSettings):
         default="redis://localhost:6379/0",
         description="Redis connection URL used for caching or task coordination.",
         validation_alias=AliasChoices("PROMPTPULSE_REDIS_URL", "REDIS_URL"),
+    )
+    openrouter_api_key: Optional[str] = Field(
+        default=None,
+        description="OpenRouter API key used for LLM integrations.",
+        validation_alias=AliasChoices("PROMPTPULSE_OPENROUTER_API_KEY", "OPENROUTER_API_KEY"),
     )
     cors_allow_origins: List[str] = Field(
         default_factory=lambda: ["http://localhost:5173"],

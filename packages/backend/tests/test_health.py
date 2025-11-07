@@ -14,10 +14,10 @@ class HealthEndpointTests(unittest.TestCase):
 
     @staticmethod
     def _client(test_case: unittest.TestCase) -> TestClient:
-        os.environ.setdefault(
-            "PROMPTPULSE_DATABASE_URL",
-            "postgresql+asyncpg://promptpulse:promptpulse123@localhost:5432/promptpulse",
-        )
+        default_dsn = "postgresql+asyncpg://promptpulse:promptpulse123@localhost:5432/promptpulse"
+        os.environ.setdefault("PROMPTPULSE_DATABASE_URL", default_dsn)
+        os.environ.setdefault("DATABASE_URL", default_dsn)
+        os.environ.setdefault("POSTGRES_URL", default_dsn)
 
         try:
             import asyncpg  # type: ignore # noqa: F401

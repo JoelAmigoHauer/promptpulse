@@ -7,6 +7,7 @@ A comprehensive production-grade technology plan, proposed repository layout, an
 
 ## Current Directories
 - `packages/backend/` – Production-aligned FastAPI service (new implementation lives here).
+- `packages/frontend/` – Minimal Vite landing page that pings the new backend health endpoint.
 - `promptpulse-backend/` – Legacy prototype backend kept for reference.
 - `promptpulse-frontend/` – React-based prototype frontend.
 - `src/services/` – Early experiments with OpenRouter integrations.
@@ -20,6 +21,8 @@ Refer to the strategy document for the long-term structure, stack decisions, and
 - `make test` runs the backend health check test suite (ensure Postgres from `make dev` is running first).
 - `make web` installs frontend dependencies and starts the Vite dev server for the new landing page.
 - `make web-build` installs dependencies and produces the static frontend build (emulates the Vercel pipeline).
+- `make legacy-api` runs the original FastAPI prototype from `promptpulse-backend/`.
+- `make legacy-web` serves the React prototype found in `promptpulse-frontend/`.
 
 Ensure Docker is installed locally before running the Make targets. To work on the backend service:
 
@@ -35,13 +38,23 @@ To work on the frontend landing page:
 3. For a production-like build, run `make web-build` and serve the generated files in `packages/frontend/dist`.
 4. Copy `packages/frontend/.env.example` to `.env` in the same directory when you need to override the default API base URL.
 
+### Legacy Prototype Quickstart
+
+The historical prototypes remain available for reference and comparison while the new monorepo implementation matures:
+
+- `make legacy-api` boots the legacy FastAPI service from `promptpulse-backend/src/main.py` on port 8000. Ensure a Python virtualenv is activated and dependencies from `promptpulse-backend/requirements.txt` are installed.
+- `make legacy-web` launches the original React interface under `promptpulse-frontend/` using Vite. The demo still expects the mock API responses bundled with the legacy backend.
+- The shell helpers in `promptpulse-backend/` (for example `start_full_app.sh`) continue to work if you prefer the previous scripted workflow.
+
+Keep in mind that these prototypes do not integrate with the new Postgres/Redis stack and still rely on mocked data and in-browser auth flows.
+
 ### Vercel Deployment
 
 The repository includes a `vercel.json` that:
 
 - Configures a monorepo-aware static build for `packages/frontend` using the same `vite build` pipeline as `make web-build`.
 - Exposes the FastAPI application through `api/backend.py` with the Python 3.11 serverless runtime.
-- Assumes the Vercel project provides `DATABASE_URL` (or `POSTGRES_PRISMA_URL` / `POSTGRES_URL`), `REDIS_URL`, and `OPENROUTER_API_KEY` via configured environment variables.
+- Assumes the Vercel project provides `DATABASE_URL` (or `POSTGRES_PRISMA_URL` / `POSTGRES_URL` / `POSTGRES_URL_NON_POOLING`), `REDIS_URL`, and `OPENROUTER_API_KEY` via configured environment variables.
   - The backend automatically falls back to the `POSTGRES_*` values when `DATABASE_URL` is absent, so existing managed Postgres credentials continue to work without renaming.
 
 **Deploying**
@@ -60,6 +73,4 @@ The repository includes a `vercel.json` that:
 
 1. After deployment completes, visit the provided URL and confirm the landing page loads and displays the health status.
 2. Verify the API function directly with `curl https://<deployment-url>/api/health`.
-
-<!-- Trigger Vercel deployment -->
 3. Optionally, run `vercel dev` locally to emulate the production routing and confirm the `/health` call succeeds before promoting changes.

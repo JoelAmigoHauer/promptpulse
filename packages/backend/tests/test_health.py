@@ -14,10 +14,10 @@ class HealthEndpointTests(unittest.TestCase):
 
     @staticmethod
     def _client(test_case: unittest.TestCase) -> TestClient:
-        os.environ.setdefault(
-            "PROMPTPULSE_DATABASE_URL",
-            "postgresql+asyncpg://promptpulse:promptpulse123@localhost:5432/promptpulse",
-        )
+        default_dsn = "postgresql+asyncpg://promptpulse:promptpulse123@localhost:5432/promptpulse"
+        os.environ.setdefault("PROMPTPULSE_DATABASE_URL", default_dsn)
+        os.environ.setdefault("DATABASE_URL", default_dsn)
+        os.environ.setdefault("POSTGRES_URL", default_dsn)
 
         try:
             import asyncpg  # type: ignore # noqa: F401
@@ -28,7 +28,7 @@ class HealthEndpointTests(unittest.TestCase):
 
         try:
             asyncio.run(check_database_connection())
-        except OperationalError as exc:  # pragma: no cover - skip when dependency is offline.
+        except (OperationalError, OSError) as exc:  # pragma: no cover - skip when dependency is offline.
             test_case.skipTest(f"Database connection failed: {exc}")
 
         from promptpulse.main import create_app  # Import after verifying connectivity.

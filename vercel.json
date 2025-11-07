@@ -2,9 +2,11 @@
   "version": 2,
   "builds": [
     {
-        "src": "promptpulse-frontend/package.json",      "use": "@vercel/static-build",
+      "src": "packages/frontend/package.json",
+      "use": "@vercel/static-build",
       "config": {
-            "distDir": "promptpulse-frontend/dist"      }
+        "distDir": "packages/frontend/dist"
+      }
     },
     {
       "src": "api/backend.py",
@@ -24,6 +26,9 @@
     { "handle": "filesystem" },
     {
       "src": "/(.*)",
-        "dest": "/promptpulse-frontend/dist/index.html"    }
+      "dest": "/packages/frontend/dist/index.html"
+    }
   ],
-    "buildCommand": "npm run build --prefix promptpulse-frontend"}
+  "installCommand": "pip install -r api/requirements.txt && npm install --prefix packages/frontend",
+  "buildCommand": "npm run vercel-build --prefix packages/frontend"
+}
